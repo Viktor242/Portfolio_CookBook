@@ -3,5 +3,6 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-    path('', views.index, name='search_index'),
+    path('', views.search_recipes, name='search'),           # ← Поиск
+    path('recipe/<int:pk>/', views.recipe_detail, name='detail'),  # ← Детали рецепта — ОБЯЗАТЕЛЬНО!
 ]
