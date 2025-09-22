@@ -1,9 +1,57 @@
 {% extends "main/base.html" %}
 {% block content %}
-  <h1>Добавить рецепт</h1>
+  <h1>{% if editing %}Редактировать рецепт{% else %}Добавить рецепт{% endif %}</h1>
+
   <form method="post">
     {% csrf_token %}
     {{ form.as_p }}
-    <button type="submit">Сохранить</button>
+
+    <h3>Ингредиенты</h3>
+
+    {{ formset.management_form }}
+
+    <div id="ingredient-list">
+      {% for subform in formset %}
+        <div class="form-row">
+          {{ subform.id }}  {# скрытое поле PK — ОБЯЗАТЕЛЬНО! #}
+          {{ subform.ingredient }} {{ subform.amount }} {{ subform.unit }}
+          {% if subform.DELETE %}
+            {{ subform.DELETE }} <label>Удалить</label>
+          {% endif %}
+        </div>
+      {% endfor %}
+    </div>
+
+    <p>
+      <button type="button" id="add-form">➕ Добавить ингредиент</button>
+    </p>
+
+    <p>
+      <button type="submit">Сохранить</button>
+      <a href="{% url 'recipe_list' %}">Отмена</a>
+    </p>
   </form>
+
+  <template id="empty-form-template">
+    {{ formset.empty_form.as_p }}
+  </template>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const addBtn = document.getElementById("add-form");
+      const container = document.getElementById("ingredient-list");
+      const totalForms = document.getElementById("id_ingredients-TOTAL_FORMS");
+      const template = document.getElementById("empty-form-template");
+
+      addBtn.addEventListener("click", function () {
+        const formNum = parseInt(totalForms.value, 10);
+        let newFormHtml = template.innerHTML.replace(/__prefix__/g, formNum);
+        const wrapper = document.createElement("div");
+        wrapper.className = "form-row";
+        wrapper.innerHTML = newFormHtml;
+        container.appendChild(wrapper);
+        totalForms.value = formNum + 1;
+      });
+    });
+  </script>
 {% endblock %}

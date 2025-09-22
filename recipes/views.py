@@ -1,12 +1,14 @@
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
-from django.http import HttpResponse
-from django.shortcuts import redirect
+from django.http import HttpResponse, HttpResponseForbidden
+from django.shortcuts import redirect, render, get_object_or_404
 from django.urls import reverse_lazy
 from django.views.generic import ListView, CreateView, DetailView, UpdateView
 
-from recipes.forms import RecipeForm, CommentForm, RatingForm
-from recipes.models import Recipe, Rating
+from recipes.forms import RecipeForm, CommentForm, RatingForm, RecipeIngredientFormSet
+from recipes.models import Recipe, Rating, Ingredient
 
+PREFIX = "ingredients"
 
 def index(request):
     return HttpResponse("Раздел рецептов работает!")
@@ -21,16 +23,61 @@ class HomePageView(ListView):
         return Recipe.objects.order_by("-created_at")[:5]  # последние 5 рецептов
 
 
-class RecipeCreateView(LoginRequiredMixin, CreateView):
-    """Добавление рецепта"""
-    model = Recipe
-    form_class = RecipeForm
-    template_name = "recipes/recipe_form.html"
-    success_url = reverse_lazy("home")
+@login_required
+def recipe_create(request):
+    prefix = "ingredients"
+    if request.method == "POST":
+        form = RecipeForm(request.POST)
+        # сначала проверяем основную форму, чтобы сохранить объект и привязать formset к instance
+        if form.is_valid():
+            recipe = form.save(commit=False)
+            recipe.author = request.user
+            recipe.save()
+            formset = RecipeIngredientFormSet(request.POST, instance=recipe, prefix=prefix)
+            if formset.is_valid():
+                formset.save()
+                return redirect("recipe_detail", pk=recipe.pk)
+        else:
+            # если основная форма невалидна — всё равно прикрепляем formset из POST,
+            # чтобы показать ошибки полей ингредиентов
+            formset = RecipeIngredientFormSet(request.POST, prefix=prefix)
+    else:
+        form = RecipeForm()
+        # создаём «пустой» instance, чтобы у formset корректно работал empty_form и prefix
+        recipe = Recipe()
+        formset = RecipeIngredientFormSet(instance=recipe, prefix=prefix)
 
-    def form_valid(self, form):
-        form.instance.author = self.request.user
-        return super().form_valid(form)
+    return render(request, "recipes/recipe_form.html", {"form": form, "formset": formset})
+
+
+@login_required
+def recipe_edit(request, pk):
+    """
+    Редактирование: валидируем одновременно main form и formset; при успехе — сохраняем.
+    """
+    recipe = get_object_or_404(Recipe, pk=pk)
+    if recipe.author != request.user:
+        return HttpResponseForbidden("Нет доступа")
+
+    if request.method == "POST":
+        form = RecipeForm(request.POST, instance=recipe)
+        formset = RecipeIngredientFormSet(request.POST, instance=recipe, prefix=PREFIX)
+
+        if form.is_valid() and formset.is_valid():
+            # Сохраняем main form и formset
+            recipe = form.save()
+            formset.instance = recipe
+            formset.save()
+            return redirect("my_recipes")
+        else:
+            # Debug: вывести ошибки в серверный лог (временно)
+            print("Recipe edit: form valid?", form.is_valid(), "form errors:", form.errors)
+            print("Recipe edit: formset valid?", formset.is_valid(), "formset non_field:", formset.non_form_errors(), "forms errors:", [f.errors for f in formset.forms])
+    else:
+        form = RecipeForm(instance=recipe)
+        formset = RecipeIngredientFormSet(instance=recipe, prefix=PREFIX)
+
+    return render(request, "recipes/recipe_form.html", {"form": form, "formset": formset, "editing": True})
 
 
 class RecipeDetailView(DetailView):
@@ -90,16 +137,34 @@ class MyRecipesView(LoginRequiredMixin, ListView):
         return Recipe.objects.filter(author=self.request.user).order_by("-created_at")
 
 
-class RecipeUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
-    """Редактирование рецепта"""
-    model = Recipe
-    form_class = RecipeForm
-    template_name = "recipes/recipe_edit.html"
+# class RecipeUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+#     """Редактирование рецепта"""
+#     model = Recipe
+#     form_class = RecipeForm
+#     template_name = "recipes/recipe_edit.html"
+#
+#     def get_success_url(self):
+#         return reverse_lazy("my_recipes")
+#
+#     def test_func(self):
+#         """Разрешаем редактировать только автору рецепта"""
+#         recipe = self.get_object()
+#         return recipe.author == self.request.user
 
-    def get_success_url(self):
-        return reverse_lazy("my_recipes")
+class IngredientListView(LoginRequiredMixin, ListView):
+    """Список всех ингредиентов"""
+    model = Ingredient
+    template_name = "recipes/ingredient_list.html"
+    context_object_name = "ingredients"
+    paginate_by = 20
 
-    def test_func(self):
-        """Разрешаем редактировать только автору рецепта"""
-        recipe = self.get_object()
-        return recipe.author == self.request.user
+    def get_queryset(self):
+        return Ingredient.objects.order_by("name")
+
+
+class IngredientCreateView(LoginRequiredMixin, CreateView):
+    """Добавление нового ингредиента"""
+    model = Ingredient
+    template_name = "recipes/ingredient_form.html"
+    fields = ["name", "default_unit"]
+    success_url = reverse_lazy("ingredient_list")

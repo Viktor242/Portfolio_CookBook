@@ -1,0 +1,26 @@
+{% extends "main/base.html" %}
+{% block content %}
+  <h1>Ингредиенты</h1>
+
+  <p><a href="{% url 'ingredient_add' %}">➕ Добавить ингредиент</a></p>
+
+  <ul>
+    {% for ingredient in ingredients %}
+      <li>{{ ingredient.name }}{% if ingredient.default_unit %} ({{ ingredient.default_unit }}){% endif %}</li>
+    {% empty %}
+      <li>Ингредиентов пока нет.</li>
+    {% endfor %}
+  </ul>
+
+  {% if is_paginated %}
+    <div class="pagination">
+      {% if page_obj.has_previous %}
+        <a href="?page={{ page_obj.previous_page_number }}">Назад</a>
+      {% endif %}
+      <span>Стр. {{ page_obj.number }} из {{ page_obj.paginator.num_pages }}</span>
+      {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}">Вперёд</a>
+      {% endif %}
+    </div>
+  {% endif %}
+{% endblock %}

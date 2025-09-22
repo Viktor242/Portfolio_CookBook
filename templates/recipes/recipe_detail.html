@@ -9,6 +9,15 @@
   <p><b>Категория:</b> {{ recipe.category }}</p>
   <p><b>Рейтинг:</b> {{ recipe.rating }}</p>
 
+  <h2>Ингредиенты:</h2>
+  <ul>
+    {% for ri in recipe.recipe_ingredients.all %}
+      <li>{{ ri.ingredient.name }} — {{ ri.amount }} {{ ri.unit }}</li>
+    {% empty %}
+      <li>Нет ингредиентов.</li>
+    {% endfor %}
+  </ul>
+
   <h2>Комментарии:</h2>
   <ul>
     {% for comment in comments %}
