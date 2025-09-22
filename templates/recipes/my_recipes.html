@@ -1,0 +1,29 @@
+{% extends "main/base.html" %}
+{% block content %}
+  <h1>Мои рецепты</h1>
+
+  <ul>
+    {% for recipe in recipes %}
+      <li>
+        <a href="{% url 'recipe_detail' recipe.pk %}">{{ recipe.title }}</a>
+        — {{ recipe.created_at|date:"d.m.Y" }}
+        <a href="{% url 'recipe_edit' recipe.pk %}">✏ Изменить</a>
+      </li>
+    {% empty %}
+      <li>У вас пока нет рецептов.</li>
+    {% endfor %}
+  </ul>
+
+  <!-- пагинация -->
+  {% if is_paginated %}
+    <div class="pagination">
+      {% if page_obj.has_previous %}
+        <a href="?page={{ page_obj.previous_page_number }}">Назад</a>
+      {% endif %}
+      <span>Стр. {{ page_obj.number }} из {{ page_obj.paginator.num_pages }}</span>
+      {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}">Вперёд</a>
+      {% endif %}
+    </div>
+  {% endif %}
+{% endblock %}
