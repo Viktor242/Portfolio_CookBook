@@ -48,6 +48,7 @@ class Recipe(models.Model):
     description = models.TextField("Описание", blank=True)
     instruction = models.TextField("Инструкция")
     cook_time = models.PositiveIntegerField("Время приготовления (мин)")
+    image = models.ImageField("Изображение", upload_to='recipes/', blank=True, null=True)
 
     category = models.ForeignKey(
         Category,

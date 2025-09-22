@@ -7,8 +7,9 @@ def search_recipes(request):
     query = request.GET.get('q', '').strip()
     category_slug = request.GET.get('category', '')
     difficulty = request.GET.get('difficulty', '')
-    min_cook_time = request.GET.get('min_cook_time', '').strip()  # ← НОВОЕ
-    max_cook_time = request.GET.get('max_cook_time', '').strip()  # ← НОВОЕ
+    min_cook_time = request.GET.get('min_cook_time', '').strip()
+    max_cook_time = request.GET.get('max_cook_time', '').strip()
+    has_image = request.GET.get('has_image', '')
     sort_by = request.GET.get('sort', '')
 
     recipes = Recipe.objects.select_related('author', 'category').prefetch_related('ingredients')
@@ -54,6 +55,11 @@ def search_recipes(request):
         except ValueError:
             pass  # Некорректный ввод — игнорируем
 
+    # Фильтр по наличию картинки
+    if has_image == 'yes':
+        recipes = recipes.exclude(image__isnull=True).exclude(image='')  # Только с картинкой
+    elif has_image == 'no':
+        recipes = recipes.filter(Q(image__isnull=True) | Q(image=''))  # Только без картинки
 
     # 🔥 СОРТИРОВКА — ключевой шаг!
     sort_options = {
@@ -91,6 +97,7 @@ def search_recipes(request):
         'min_cook_time': min_cook_time,
         'max_cook_time': max_cook_time,
         'sort_by': sort_by,
+        'has_image': has_image,
         'page_obj': page_obj,  # ← Передаём для пагинации
     })
 

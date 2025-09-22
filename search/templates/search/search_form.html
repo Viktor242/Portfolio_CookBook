@@ -72,6 +72,19 @@
     >
   </div>
 
+  <!-- Фильтр по картинке -->
+  <div style="display: flex; align-items: center; gap: 8px; width: 100%; max-width: 800px;">
+    <label for="id_has_image" style="font-weight: bold; min-width: 120px;">С картинкой:</label>
+    <select
+      name="has_image"
+      id="id_has_image"
+      style="flex: 1; padding: 8px; font-size: 16px; border: 1px solid #ccc; border-radius: 4px;"
+    >
+      <option value="">Все рецепты</option>
+      <option value="yes" {% if has_image == 'yes' %}selected{% endif %}>Только с картинкой</option>
+      <option value="no" {% if has_image == 'no' %}selected{% endif %}>Только без картинки</option>
+    </select>
+  </div>
 
   <!-- СОРТИРОВКА -->
   <div style="display: flex; align-items: center; gap: 8px; width: 100%; max-width: 800px;">
