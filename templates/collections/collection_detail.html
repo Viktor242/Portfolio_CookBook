@@ -1,0 +1,15 @@
+{% extends "main/base.html" %}
+{% block content %}
+<h1>{{ collection.title }}</h1>
+<p>{{ collection.description }}</p>
+
+<ul>
+  {% for item in collection.items.all %}
+    <li>
+      <a href="{% url 'recipe_detail' item.recipe.pk %}">{{ item.recipe.title }}</a>
+    </li>
+  {% empty %}
+    <li>В коллекции пока нет рецептов.</li>
+  {% endfor %}
+</ul>
+{% endblock %}

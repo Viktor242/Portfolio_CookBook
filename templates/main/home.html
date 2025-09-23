@@ -3,6 +3,20 @@
 {% block title %}Home - CookBook{% endblock %}
 
 {% block content %}
-<h2>Главная страница проекта CookBook</h2>
-<p>Здесь будут рецепты, коллекции и поиск.</p>
+  <h1>Добро пожаловать на сайт рецептов!</h1>
+  <p>Здесь вы можете делиться любимыми рецептами и находить новые идеи.</p>
+
+  <h2>Свежие рецепты:</h2>
+  <ul>
+    {% for recipe in recipes %}
+      <li>
+        <a href="{% url 'recipe_detail' recipe.pk %}">{{ recipe.title }}</a>
+        (автор: {{ recipe.author }}, рейтинг: {{ recipe.rating }})
+      </li>
+    {% empty %}
+      <li>Пока нет рецептов.</li>
+    {% endfor %}
+  </ul>
+
+  <p><a href="{% url 'recipe_add' %}">➕ Добавить рецепт</a></p>
 {% endblock %}

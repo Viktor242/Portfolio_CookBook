@@ -194,6 +194,7 @@ from django.db import models
 from django.conf import settings
 from django.db import models
 from django.db.models import PROTECT, Avg
+from django.utils.html import format_html
 from django.utils.text import slugify
 
 
@@ -261,7 +262,15 @@ class Recipe(models.Model):
         default="easy",
     )
 
-    # Рейтинг теперь считается автоматически из таблицы Rating
+    # Фото рецепта (опционально)
+    image = models.ImageField(
+        "Фото блюда",
+        upload_to="recipes/images/",
+        blank=True,
+        null=True,
+    )
+
+    # Рейтинг считается автоматически по оценкам
     rating = models.DecimalField(
         "Рейтинг", max_digits=3, decimal_places=2, default=0, editable=False
     )
@@ -270,7 +279,7 @@ class Recipe(models.Model):
     updated_at = models.DateTimeField("Изменено", auto_now=True)
 
     ingredients = models.ManyToManyField(
-        Ingredient,
+        "Ingredient",
         through="RecipeIngredient",
         related_name="recipes",
         verbose_name="Ингредиенты",
@@ -284,28 +293,54 @@ class Recipe(models.Model):
     def __str__(self):
         return self.title
 
+    def image_tag(self):
+        """Миниатюра для админки."""
+        if self.image:
+            return format_html('<img src="{}" style="max-height:60px;"/>', self.image.url)
+        return "—"
+    image_tag.short_description = "Фото"
+
     def update_rating(self):
-        """
-        Пересчитывает средний рейтинг из связанных оценок.
-        Округляем до сотых и пишем в DecimalField (не редактируется вручную).
-        """
+        """Пересчитать средний рейтинг из связанных оценок."""
         agg = self.ratings.aggregate(avg=Avg("value"))
         avg_value = agg["avg"]
         if avg_value is None:
             new_value = Decimal("0.00")
         else:
-            # Приводим через str, чтобы избежать артефактов float
             new_value = Decimal(str(avg_value)).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
         if self.rating != new_value:
             self.rating = new_value
             self.save(update_fields=["rating"])
 
+    @property
+    def main_image(self):
+        """Вернуть главное изображение (если есть)."""
+        main = self.images.filter(is_main=True).first()
+        if main:
+            return main.image.url
+        return None
+
+class RecipeImage(models.Model):
+    recipe = models.ForeignKey(
+        Recipe, on_delete=models.CASCADE, related_name="images", verbose_name="Рецепт"
+    )
+    image = models.ImageField("Изображение", upload_to="recipes/")
+    is_main = models.BooleanField("Основное", default=False)
+    position = models.PositiveIntegerField("Порядок", default=0)
+
+    class Meta:
+        verbose_name = "Изображение рецепта"
+        verbose_name_plural = "Изображения рецептов"
+        ordering = ["position", "id"]
+
+    def __str__(self):
+        return f"{self.recipe.title} → {self.image.name}"
 
 class RecipeIngredient(models.Model):
     recipe = models.ForeignKey(
         Recipe, on_delete=models.CASCADE, related_name="recipe_ingredients"
     )
-    # ВАЖНО: PROTECT — запретит удалить ингредиент, если он используется в рецептах
+    # PROTECT — нельзя удалить ингредиент, если он используется
     ingredient = models.ForeignKey(
         Ingredient, on_delete=PROTECT, related_name="ingredient_recipes"
     )

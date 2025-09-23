@@ -1,0 +1,73 @@
+{% extends "main/base.html" %}
+{% block content %}
+  <h1>{{ recipe.title }}</h1>
+
+  <h2>Изображения:</h2>
+  {% if recipe.images.exists %}
+    {% for img in recipe.images.all %}
+      <img src="{{ img.image.url }}" alt="{{ recipe.title }}" style="max-width:200px;">
+    {% endfor %}
+  {% else %}
+    <p>Нет изображений.</p>
+  {% endif %}
+
+  <p><b>Автор:</b> {{ recipe.author }}</p>
+  <p><b>Описание:</b> {{ recipe.description }}</p>
+  <p><b>Инструкция:</b> {{ recipe.instruction }}</p>
+  <p><b>Время приготовления:</b> {{ recipe.cook_time }} минут</p>
+  <p><b>Сложность:</b> {{ recipe.get_difficulty_display }}</p>
+  <p><b>Категория:</b> {{ recipe.category }}</p>
+  <p><b>Рейтинг:</b> {{ recipe.rating }}</p>
+
+  <h2>Ингредиенты:</h2>
+  <ul>
+    {% for ri in recipe.recipe_ingredients.all %}
+      <li>{{ ri.ingredient.name }} — {{ ri.amount }} {{ ri.unit }}</li>
+    {% empty %}
+      <li>Нет ингредиентов.</li>
+    {% endfor %}
+  </ul>
+
+  <h2>Комментарии:</h2>
+  <ul>
+    {% for comment in comments %}
+      <li><b>{{ comment.user }}:</b> {{ comment.text }} ({{ comment.created_at|date:"d.m.Y H:i" }})</li>
+    {% empty %}
+      <li>Комментариев пока нет.</li>
+    {% endfor %}
+  </ul>
+
+  {% if user.is_authenticated %}
+    <h3>Оставить комментарий:</h3>
+    <form method="post">
+      {% csrf_token %}
+      {{ comment_form.as_p }}
+      <button type="submit">Отправить</button>
+    </form>
+
+    <h3>Поставить оценку:</h3>
+    <form method="post">
+      {% csrf_token %}
+      {{ rating_form.as_p }}
+      <button type="submit">Оценить</button>
+    </form>
+    <h3>Мои коллекции</h3>
+    <ul>
+      {% for c in collections %}
+        <li>
+          {{ c.obj.title }} —
+          {% if c.in_collection %}
+            ✅ Уже в коллекции
+            <a href="{% url 'toggle_recipe_in_collection' c.obj.pk recipe.pk %}">Удалить</a>
+          {% else %}
+            <a href="{% url 'toggle_recipe_in_collection' c.obj.pk recipe.pk %}">Добавить</a>
+          {% endif %}
+        </li>
+      {% empty %}
+        <li>У вас пока нет коллекций. <a href="{% url 'collection_add' %}">Создать</a></li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p><a href="{% url 'login' %}">Войдите</a>, чтобы оставить комментарий или оценку.</p>
+  {% endif %}
+{% endblock %}
