@@ -2,18 +2,16 @@
 {% block content %}
   <h1>{% if editing %}Редактировать рецепт{% else %}Добавить рецепт{% endif %}</h1>
 
-  <form method="post">
+  <form method="post" enctype="multipart/form-data">
     {% csrf_token %}
     {{ form.as_p }}
 
     <h3>Ингредиенты</h3>
-
     {{ formset.management_form }}
-
     <div id="ingredient-list">
       {% for subform in formset %}
         <div class="form-row">
-          {{ subform.id }}  {# скрытое поле PK — ОБЯЗАТЕЛЬНО! #}
+          {{ subform.id }}  {# скрытое поле PK — ОБЯЗАТЕЛЬНО для редактирования существующих записей #}
           {{ subform.ingredient }} {{ subform.amount }} {{ subform.unit }}
           {% if subform.DELETE %}
             {{ subform.DELETE }} <label>Удалить</label>
@@ -26,32 +24,77 @@
       <button type="button" id="add-form">➕ Добавить ингредиент</button>
     </p>
 
+    <h3>Изображения</h3>
+    {{ image_formset.management_form }}
+    <div id="image-list">
+      {% for imgform in image_formset %}
+        <div class="form-row">
+          {{ imgform.id }}
+          {{ imgform.image }}
+          {{ imgform.is_main }} <label>Основное</label>
+          {% if imgform.DELETE %}
+            {{ imgform.DELETE }} <label>Удалить</label>
+          {% endif %}
+        </div>
+      {% endfor %}
+    </div>
+
+    <p>
+      <button type="button" id="add-image-form">➕ Добавить изображение</button>
+    </p>
+
     <p>
       <button type="submit">Сохранить</button>
       <a href="{% url 'recipe_list' %}">Отмена</a>
     </p>
   </form>
 
+  <!-- Шаблон пустого ингредиента -->
   <template id="empty-form-template">
     {{ formset.empty_form.as_p }}
   </template>
 
-  <script>
-    document.addEventListener("DOMContentLoaded", function () {
-      const addBtn = document.getElementById("add-form");
-      const container = document.getElementById("ingredient-list");
-      const totalForms = document.getElementById("id_ingredients-TOTAL_FORMS");
-      const template = document.getElementById("empty-form-template");
+  <!-- Шаблон пустого изображения -->
+  <template id="empty-image-template">
+    <div class="form-row">
+      {{ image_formset.empty_form.as_p }}
+    </div>
+  </template>
 
-      addBtn.addEventListener("click", function () {
-        const formNum = parseInt(totalForms.value, 10);
-        let newFormHtml = template.innerHTML.replace(/__prefix__/g, formNum);
-        const wrapper = document.createElement("div");
-        wrapper.className = "form-row";
-        wrapper.innerHTML = newFormHtml;
-        container.appendChild(wrapper);
-        totalForms.value = formNum + 1;
-      });
+  <script>
+  document.addEventListener("DOMContentLoaded", function () {
+    // === Ингредиенты ===
+    const addBtn = document.getElementById("add-form");
+    const container = document.getElementById("ingredient-list");
+    const totalForms = document.getElementById("id_ingredients-TOTAL_FORMS");
+    const template = document.getElementById("empty-form-template");
+
+    addBtn.addEventListener("click", function () {
+      const formNum = parseInt(totalForms.value, 10);
+      let newFormHtml = template.content.firstElementChild.outerHTML.replace(/__prefix__/g, formNum);
+      const wrapper = document.createElement("div");
+      wrapper.className = "form-row";
+      wrapper.innerHTML = newFormHtml;
+      container.appendChild(wrapper);
+      totalForms.value = formNum + 1;
     });
+
+    // === Изображения ===
+    const addImgBtn = document.getElementById("add-image-form");
+    const imgContainer = document.getElementById("image-list");
+    const totalImgForms = document.getElementById("id_images-TOTAL_FORMS");
+    const imgTemplate = document.getElementById("empty-image-template");
+
+    addImgBtn.addEventListener("click", function () {
+      const formNum = parseInt(totalImgForms.value, 10);
+      let newFormHtml = imgTemplate.innerHTML.replace(/__prefix__/g, formNum);
+      const wrapper = document.createElement("div");
+      wrapper.className = "form-row";
+      wrapper.innerHTML = newFormHtml;
+      imgContainer.appendChild(wrapper);
+      totalImgForms.value = formNum + 1;
+    });
+  });
   </script>
 {% endblock %}
+

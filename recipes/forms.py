@@ -1,7 +1,7 @@
 from django import forms
 from django.forms import inlineformset_factory
 
-from recipes.models import Recipe, Rating, Comment, RecipeIngredient
+from recipes.models import Recipe, Rating, Comment, RecipeIngredient, RecipeImage
 
 
 class RecipeForm(forms.ModelForm):
@@ -18,6 +18,14 @@ RecipeIngredientFormSet = inlineformset_factory(
     Recipe,
     RecipeIngredient,
     form=RecipeIngredientForm,
+    extra=1,
+    can_delete=True
+)
+
+RecipeImageFormSet = inlineformset_factory(
+    Recipe,
+    RecipeImage,
+    fields=("image", "is_main"),
     extra=1,
     can_delete=True
 )

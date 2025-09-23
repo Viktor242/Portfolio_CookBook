@@ -109,6 +109,29 @@ class Recipe(models.Model):
             self.rating = new_value
             self.save(update_fields=["rating"])
 
+    @property
+    def main_image(self):
+        """Вернуть главное изображение (если есть)."""
+        main = self.images.filter(is_main=True).first()
+        if main:
+            return main.image.url
+        return None
+
+class RecipeImage(models.Model):
+    recipe = models.ForeignKey(
+        Recipe, on_delete=models.CASCADE, related_name="images", verbose_name="Рецепт"
+    )
+    image = models.ImageField("Изображение", upload_to="recipes/")
+    is_main = models.BooleanField("Основное", default=False)
+    position = models.PositiveIntegerField("Порядок", default=0)
+
+    class Meta:
+        verbose_name = "Изображение рецепта"
+        verbose_name_plural = "Изображения рецептов"
+        ordering = ["position", "id"]
+
+    def __str__(self):
+        return f"{self.recipe.title} → {self.image.name}"
 
 class RecipeIngredient(models.Model):
     recipe = models.ForeignKey(

@@ -5,7 +5,7 @@ from django.shortcuts import redirect, render, get_object_or_404
 from django.urls import reverse_lazy
 from django.views.generic import ListView, CreateView, DetailView, UpdateView
 
-from recipes.forms import RecipeForm, CommentForm, RatingForm, RecipeIngredientFormSet
+from recipes.forms import RecipeForm, CommentForm, RatingForm, RecipeIngredientFormSet, RecipeImageFormSet
 from recipes.models import Recipe, Rating, Ingredient
 
 PREFIX = "ingredients"
@@ -25,59 +25,96 @@ class HomePageView(ListView):
 
 @login_required
 def recipe_create(request):
-    prefix = "ingredients"
+    prefix_ingredients = "ingredients"
+    prefix_images = "images"
+
     if request.method == "POST":
         form = RecipeForm(request.POST)
-        # сначала проверяем основную форму, чтобы сохранить объект и привязать formset к instance
         if form.is_valid():
             recipe = form.save(commit=False)
             recipe.author = request.user
             recipe.save()
-            formset = RecipeIngredientFormSet(request.POST, instance=recipe, prefix=prefix)
-            if formset.is_valid():
-                formset.save()
+
+            formset_ingredients = RecipeIngredientFormSet(
+                request.POST, instance=recipe, prefix=prefix_ingredients
+            )
+            image_formset = RecipeImageFormSet(
+                request.POST, request.FILES, instance=recipe, prefix=prefix_images
+            )
+
+            if formset_ingredients.is_valid() and image_formset.is_valid():
+                formset_ingredients.save()
+                image_formset.save()
                 return redirect("recipe_detail", pk=recipe.pk)
         else:
-            # если основная форма невалидна — всё равно прикрепляем formset из POST,
-            # чтобы показать ошибки полей ингредиентов
-            formset = RecipeIngredientFormSet(request.POST, prefix=prefix)
+            formset_ingredients = RecipeIngredientFormSet(
+                request.POST, prefix=prefix_ingredients
+            )
+            image_formset = RecipeImageFormSet(
+                request.POST, request.FILES, prefix=prefix_images
+            )
     else:
         form = RecipeForm()
-        # создаём «пустой» instance, чтобы у formset корректно работал empty_form и prefix
         recipe = Recipe()
-        formset = RecipeIngredientFormSet(instance=recipe, prefix=prefix)
+        formset_ingredients = RecipeIngredientFormSet(
+            instance=recipe, prefix=prefix_ingredients
+        )
+        image_formset = RecipeImageFormSet(
+            instance=recipe, prefix=prefix_images
+        )
 
-    return render(request, "recipes/recipe_form.html", {"form": form, "formset": formset})
+    return render(
+        request,
+        "recipes/recipe_form.html",
+        {
+            "form": form,
+            "formset": formset_ingredients,
+            "image_formset": image_formset,
+        },
+    )
 
 
 @login_required
 def recipe_edit(request, pk):
-    """
-    Редактирование: валидируем одновременно main form и formset; при успехе — сохраняем.
-    """
     recipe = get_object_or_404(Recipe, pk=pk)
     if recipe.author != request.user:
         return HttpResponseForbidden("Нет доступа")
 
+    prefix_ingredients = "ingredients"
+    prefix_images = "images"
+
     if request.method == "POST":
         form = RecipeForm(request.POST, instance=recipe)
-        formset = RecipeIngredientFormSet(request.POST, instance=recipe, prefix=PREFIX)
+        formset_ingredients = RecipeIngredientFormSet(
+            request.POST, instance=recipe, prefix=prefix_ingredients
+        )
+        image_formset = RecipeImageFormSet(
+            request.POST, request.FILES, instance=recipe, prefix=prefix_images
+        )
 
-        if form.is_valid() and formset.is_valid():
-            # Сохраняем main form и formset
+        print(f"image_formset.errors: {image_formset.errors}")
+        if form.is_valid() and formset_ingredients.is_valid() and image_formset.is_valid():
             recipe = form.save()
-            formset.instance = recipe
-            formset.save()
+            formset_ingredients.instance = recipe
+            image_formset.instance = recipe
+            formset_ingredients.save()
+            image_formset.save()
             return redirect("my_recipes")
-        else:
-            # Debug: вывести ошибки в серверный лог (временно)
-            print("Recipe edit: form valid?", form.is_valid(), "form errors:", form.errors)
-            print("Recipe edit: formset valid?", formset.is_valid(), "formset non_field:", formset.non_form_errors(), "forms errors:", [f.errors for f in formset.forms])
     else:
         form = RecipeForm(instance=recipe)
-        formset = RecipeIngredientFormSet(instance=recipe, prefix=PREFIX)
+        formset_ingredients = RecipeIngredientFormSet(instance=recipe, prefix=prefix_ingredients)
+        image_formset = RecipeImageFormSet(instance=recipe, prefix=prefix_images)
 
-    return render(request, "recipes/recipe_form.html", {"form": form, "formset": formset, "editing": True})
+    return render(
+        request,
+        "recipes/recipe_form.html",
+        {
+            "form": form,
+            "formset": formset_ingredients,
+            "image_formset": image_formset,
+            "editing": True,
+        },
+    )
 
 @login_required
 def recipe_delete(request, pk):

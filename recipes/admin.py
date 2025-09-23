@@ -1,5 +1,7 @@
 from django.contrib import admin
-from .models import Category, Ingredient, Recipe, RecipeIngredient, Comment, Rating
+from django.db.models import ProtectedError
+
+from .models import Category, Ingredient, Recipe, RecipeIngredient, Comment, Rating, RecipeImage
 
 
 class RecipeIngredientInline(admin.TabularInline):
@@ -45,6 +47,10 @@ class IngredientAdmin(admin.ModelAdmin):
                 level=messages.ERROR
             )
 
+class RecipeImageInline(admin.TabularInline):
+    model = RecipeImage
+    extra = 1
+
 @admin.register(Recipe)
 class RecipeAdmin(admin.ModelAdmin):
     list_display = (
@@ -60,7 +66,7 @@ class RecipeAdmin(admin.ModelAdmin):
     search_fields = ("title", "description")
     autocomplete_fields = ["author", "category"]
     readonly_fields = ("rating",)  # рейтинг только для просмотра
-    inlines = [RecipeIngredientInline, CommentInline, RatingInline]
+    inlines = [RecipeIngredientInline, CommentInline, RatingInline, RecipeImageInline]
 
 
 @admin.register(Comment)
@@ -76,3 +82,7 @@ class RatingAdmin(admin.ModelAdmin):
     list_display = ("recipe", "user", "value", "created_at")
     list_filter = ("value",)
     autocomplete_fields = ["recipe", "user"]
+
+@admin.register(RecipeImage)
+class RecipeImageAdmin(admin.ModelAdmin):
+    list_display = ("recipe", "image", "is_main", "position")
