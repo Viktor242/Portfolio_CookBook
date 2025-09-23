@@ -51,7 +51,9 @@
 
   <!-- Шаблон пустого ингредиента -->
   <template id="empty-form-template">
-    {{ formset.empty_form.as_p }}
+    <div class="form-row">
+      {{ formset.empty_form.as_p }}
+    </div>
   </template>
 
   <!-- Шаблон пустого изображения -->

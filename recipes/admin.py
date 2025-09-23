@@ -1,5 +1,6 @@
 from django.contrib import admin, messages
 from django.db.models import ProtectedError
+from django.utils.html import format_html
 
 from .models import Category, Ingredient, Recipe, RecipeIngredient, Comment, Rating, RecipeImage
 
