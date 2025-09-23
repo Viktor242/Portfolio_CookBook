@@ -1,0 +1,22 @@
+<!-- search/templates/search/pagination.html -->
+{% if page_obj.has_other_pages %}
+  <div style="margin: 20px 0; text-align: center; display: flex; justify-content: center; gap: 10px; flex-wrap: wrap;">
+    {% if page_obj.has_previous %}
+      <a href="?q={{ query }}&category={{ selected_category }}&difficulty={{ selected_difficulty }}&min_cook_time={{ min_cook_time }}&max_cook_time={{ max_cook_time }}&sort={{ sort_by }}&page={{ page_obj.previous_page_number }}"
+         style="padding: 8px 12px; background: #007bff; color: white; text-decoration: none; border-radius: 4px;">
+        ← Назад
+      </a>
+    {% endif %}
+
+    <span style="padding: 8px 12px; background: #f0f0f0; border-radius: 4px;">
+      Страница {{ page_obj.number }} из {{ page_obj.paginator.num_pages }}
+    </span>
+
+    {% if page_obj.has_next %}
+      <a href="?q={{ query }}&category={{ selected_category }}&difficulty={{ selected_difficulty }}&min_cook_time={{ min_cook_time }}&max_cook_time={{ max_cook_time }}&sort={{ sort_by }}&page={{ page_obj.next_page_number }}"
+         style="padding: 8px 12px; background: #007bff; color: white; text-decoration: none; border-radius: 4px;">
+        Вперёд →
+      </a>
+    {% endif %}
+  </div>
+{% endif %}

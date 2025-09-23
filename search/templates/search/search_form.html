@@ -1,0 +1,126 @@
+<!-- search/templates/search/search_form.html -->
+<form method="GET" action="{% url 'search' %}" style="margin: 20px 0; padding: 15px; background: #f9f9f9; border-radius: 8px; border: 1px solid #ddd; display: flex; flex-wrap: wrap; gap: 12px; align-items: center; flex-direction: column;">
+
+  <!-- Поиск по тексту -->
+  <div style="display: flex; align-items: center; gap: 8px; width: 100%; max-width: 800px;">
+    <label for="id_q" style="font-weight: bold; min-width: 80px;">Найти:</label>
+    <input
+      type="text"
+      name="q"
+      id="id_q"
+      value="{{ query }}"
+      placeholder="Введите название, ингредиент или автора..."
+      style="flex: 1; padding: 8px; font-size: 16px; border: 1px solid #ccc; border-radius: 4px;"
+    >
+  </div>
+
+  <!-- Категория -->
+  <div style="display: flex; align-items: center; gap: 8px; width: 100%; max-width: 800px;">
+    <label for="id_category" style="font-weight: bold; min-width: 80px;">Категория:</label>
+    <select
+      name="category"
+      id="id_category"
+      style="flex: 1; padding: 8px; font-size: 16px; border: 1px solid #ccc; border-radius: 4px;"
+    >
+      <option value="">Все категории</option>
+      {% for cat in categories %}
+        <option value="{{ cat.slug }}" {% if selected_category == cat.slug %}selected{% endif %}>
+          {{ cat.name }}
+        </option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <!-- Сложность -->
+  <div style="display: flex; align-items: center; gap: 8px; width: 100%; max-width: 800px;">
+    <label for="id_difficulty" style="font-weight: bold; min-width: 80px;">Сложность:</label>
+    <select
+      name="difficulty"
+      id="id_difficulty"
+      style="flex: 1; padding: 8px; font-size: 16px; border: 1px solid #ccc; border-radius: 4px;"
+    >
+      <option value="">Все сложности</option>
+      <option value="easy" {% if selected_difficulty == 'easy' %}selected{% endif %}>Легко</option>
+      <option value="medium" {% if selected_difficulty == 'medium' %}selected{% endif %}>Средне</option>
+      <option value="hard" {% if selected_difficulty == 'hard' %}selected{% endif %}>Сложно</option>
+    </select>
+  </div>
+
+  <!-- Время приготовления -->
+  <div style="display: flex; align-items: center; gap: 8px; width: 100%; max-width: 800px;">
+    <label for="id_min_cook_time" style="font-weight: bold; min-width: 100px;">Время (мин): </label>
+
+    <span style="color: #666;">от</span>
+    <input
+      type="number"
+      name="min_cook_time"
+      id="id_min_cook_time"
+      value="{{ min_cook_time }}"
+      placeholder="От"
+      min="0"
+      style="width: 100px; padding: 8px; font-size: 16px; border: 1px solid #ccc; border-radius: 4px;"
+    >
+    <span style="color: #666;">до</span>
+    <input
+      type="number"
+      name="max_cook_time"
+      id="id_max_cook_time"
+      value="{{ max_cook_time }}"
+      placeholder="До"
+      min="0"
+      style="width: 100px; padding: 8px; font-size: 16px; border: 1px solid #ccc; border-radius: 4px;"
+    >
+  </div>
+
+  <!-- Фильтр по картинке -->
+  <div style="display: flex; align-items: center; gap: 8px; width: 100%; max-width: 800px;">
+    <label for="id_has_image" style="font-weight: bold; min-width: 120px;">С картинкой:</label>
+    <select
+      name="has_image"
+      id="id_has_image"
+      style="flex: 1; padding: 8px; font-size: 16px; border: 1px solid #ccc; border-radius: 4px;"
+    >
+      <option value="">Все рецепты</option>
+      <option value="yes" {% if has_image == 'yes' %}selected{% endif %}>Только с картинкой</option>
+      <option value="no" {% if has_image == 'no' %}selected{% endif %}>Только без картинки</option>
+    </select>
+  </div>
+
+  <!-- СОРТИРОВКА -->
+  <div style="display: flex; align-items: center; gap: 8px; width: 100%; max-width: 800px;">
+    <label for="id_sort" style="font-weight: bold; min-width: 80px;">Сортировать:</label>
+    <select
+      name="sort"
+      id="id_sort"
+      style="flex: 1; padding: 8px; font-size: 16px; border: 1px solid #ccc; border-radius: 4px;"
+      onchange="this.form.submit()"  <!-- 🚀 Автосабмит при выборе! -->
+    >
+      <option value="">— По умолчанию —</option>
+      <option value="newest" {% if sort_by == 'newest' %}selected{% endif %}>Новые первыми</option>
+      <option value="oldest" {% if sort_by == 'oldest' %}selected{% endif %}>Старые первыми</option>
+      <option value="rating_high" {% if sort_by == 'rating_high' %}selected{% endif %}>По рейтингу (высокий)</option>
+      <option value="rating_low" {% if sort_by == 'rating_low' %}selected{% endif %}>По рейтингу (низкий)</option>
+      <option value="time_short" {% if sort_by == 'time_short' %}selected{% endif %}>По времени (быстрые)</option>
+      <option value="time_long" {% if sort_by == 'time_long' %}selected{% endif %}>По времени (долгие)</option>
+      <option value="title_a_z" {% if sort_by == 'title_a_z' %}selected{% endif %}>По названию (А-Я)</option>
+      <option value="title_z_a" {% if sort_by == 'title_z_a' %}selected{% endif %}>По названию (Я-А)</option>
+    </select>
+  </div>
+
+
+  <!-- Кнопки -->
+  <div style="display: flex; gap: 10px; margin-top: 15px; width: 100%; max-width: 800px; justify-content: center;">
+    <button
+      type="submit"
+      style="padding: 8px 20px; font-size: 16px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;"
+    >
+      Поиск
+    </button>
+
+    {% if query or selected_category or selected_difficulty or min_cook_time or max_cook_time %}
+      <a href="{% url 'search' %}" style="padding: 8px 16px; font-size: 16px; color: #666; text-decoration: none; border: 1px solid #ccc; border-radius: 4px; background: white; cursor: pointer;">
+        Очистить
+      </a>
+    {% endif %}
+  </div>
+</form>

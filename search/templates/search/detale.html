@@ -1,0 +1,18 @@
+<!-- search/templates/search/detail.html -->
+<h1>{{ recipe.title }}</h1>
+<p><strong>Автор:</strong> {{ recipe.author.username }}</p>
+<p><strong>Категория:</strong> {{ recipe.category.name|default:"Без категории" }}</p>
+<p><strong>Сложность:</strong> {{ recipe.get_difficulty_display }}</p>
+<p><strong>Рейтинг:</strong> {{ recipe.rating }} ⭐</p>
+<p><strong>Время приготовления:</strong> {{ recipe.cook_time }} мин</p>
+<h3>Инструкция:</h3>
+<p>{{ recipe.instruction|linebreaks }}</p>
+
+<h3>Ингредиенты:</h3>
+<ul>
+  {% for ri in recipe.recipe_ingredients.all %}
+    <li>{{ ri.ingredient.name }} — {{ ri.amount }} {{ ri.unit|default:"" }}</li>
+  {% endfor %}
+</ul>
+
+<a href="{% url 'search' %}">← Назад к поиску</a>
