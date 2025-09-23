@@ -79,6 +79,19 @@ def recipe_edit(request, pk):
 
     return render(request, "recipes/recipe_form.html", {"form": form, "formset": formset, "editing": True})
 
+@login_required
+def recipe_delete(request, pk):
+    recipe = get_object_or_404(Recipe, pk=pk)
+    if recipe.author != request.user:
+        return HttpResponseForbidden("Нет доступа")
+
+    if request.method == "POST":
+        recipe.delete()
+        return redirect("my_recipes")
+
+    return render(request, "recipes/recipe_confirm_delete.html", {
+        "recipe": recipe,
+    })
 
 class RecipeDetailView(DetailView):
     """Страница рецепта с комментариями и оценками"""
@@ -91,6 +104,13 @@ class RecipeDetailView(DetailView):
         context["comment_form"] = CommentForm()
         context["rating_form"] = RatingForm()
         context["comments"] = self.object.comments.all()
+        if self.request.user.is_authenticated:
+            collections = self.request.user.collections.all()
+            recipe = self.get_object()
+            context["collections"] = [
+                {"obj": c, "in_collection": c.items.filter(recipe=recipe).exists()}
+                for c in collections
+            ]
         return context
 
     def post(self, request, *args, **kwargs):
@@ -136,20 +156,6 @@ class MyRecipesView(LoginRequiredMixin, ListView):
     def get_queryset(self):
         return Recipe.objects.filter(author=self.request.user).order_by("-created_at")
 
-
-# class RecipeUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
-#     """Редактирование рецепта"""
-#     model = Recipe
-#     form_class = RecipeForm
-#     template_name = "recipes/recipe_edit.html"
-#
-#     def get_success_url(self):
-#         return reverse_lazy("my_recipes")
-#
-#     def test_func(self):
-#         """Разрешаем редактировать только автору рецепта"""
-#         recipe = self.get_object()
-#         return recipe.author == self.request.user
 
 class IngredientListView(LoginRequiredMixin, ListView):
     """Список всех ингредиентов"""

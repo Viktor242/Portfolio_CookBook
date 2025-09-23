@@ -41,6 +41,22 @@
       {{ rating_form.as_p }}
       <button type="submit">Оценить</button>
     </form>
+    <h3>Мои коллекции</h3>
+    <ul>
+      {% for c in collections %}
+        <li>
+          {{ c.obj.title }} —
+          {% if c.in_collection %}
+            ✅ Уже в коллекции
+            <a href="{% url 'toggle_recipe_in_collection' c.obj.pk recipe.pk %}">Удалить</a>
+          {% else %}
+            <a href="{% url 'toggle_recipe_in_collection' c.obj.pk recipe.pk %}">Добавить</a>
+          {% endif %}
+        </li>
+      {% empty %}
+        <li>У вас пока нет коллекций. <a href="{% url 'collection_add' %}">Создать</a></li>
+      {% endfor %}
+    </ul>
   {% else %}
     <p><a href="{% url 'login' %}">Войдите</a>, чтобы оставить комментарий или оценку.</p>
   {% endif %}

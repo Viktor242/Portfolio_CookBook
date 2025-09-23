@@ -7,7 +7,8 @@
       <li>
         <a href="{% url 'recipe_detail' recipe.pk %}">{{ recipe.title }}</a>
         — {{ recipe.created_at|date:"d.m.Y" }}
-        <a href="{% url 'recipe_edit' recipe.pk %}">✏ Изменить</a>
+        <a href="{% url 'recipe_edit' recipe.pk %}">✏ Изменить</a> |
+        <a href="{% url 'recipe_delete' recipe.pk %}">🗑 Удалить</a>
       </li>
     {% empty %}
       <li>У вас пока нет рецептов.</li>

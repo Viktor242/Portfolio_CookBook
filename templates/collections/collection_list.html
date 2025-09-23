@@ -1,0 +1,36 @@
+{% extends "main/base.html" %}
+{% block content %}
+<h1>Коллекции</h1>
+
+<h2>Мои коллекции</h2>
+<p><a href="{% url 'collection_add' %}">➕ Создать коллекцию</a></p>
+<ul>
+  {% for collection in my_collections %}
+    <li>
+      <a href="{% url 'collection_detail' collection.pk %}">{{ collection.title }}</a>
+      ({{ collection.items.count }} рецептов)
+      —
+      <a href="{% url 'collection_edit' collection.pk %}">✏️ Изменить</a> |
+      <a href="{% url 'collection_delete' collection.pk %}">🗑 Удалить</a>
+    </li>
+  {% empty %}
+    <li>У вас пока нет коллекций.</li>
+  {% endfor %}
+</ul>
+
+<hr>
+
+<h2>Публичные коллекции пользователей</h2>
+<ul>
+  {% for collection in public_collections %}
+    <li>
+      <a href="{% url 'collection_detail' collection.pk %}">{{ collection.title }}</a>
+      — автор: {{ collection.owner.get_full_name|default:collection.owner.username }}
+      ({{ collection.items.count }} рецептов)
+    </li>
+  {% empty %}
+    <li>Нет публичных коллекций.</li>
+  {% endfor %}
+</ul>
+{% endblock %}
+
