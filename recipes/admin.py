@@ -75,8 +75,4 @@ class CommentAdmin(admin.ModelAdmin):
 class RatingAdmin(admin.ModelAdmin):
     list_display = ("recipe", "user", "value", "created_at")
     list_filter = ("value",)
-<<<<<<< HEAD
     autocomplete_fields = ["recipe", "user"]
-=======
-    autocomplete_fields = ["recipe", "user"]
->>>>>>> feature/search
