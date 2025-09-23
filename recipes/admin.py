@@ -1,4 +1,4 @@
-from django.contrib import admin
+from django.contrib import admin, messages
 from django.db.models import ProtectedError
 
 from .models import Category, Ingredient, Recipe, RecipeIngredient, Comment, Rating, RecipeImage
@@ -37,6 +37,7 @@ class CategoryAdmin(admin.ModelAdmin):
 class IngredientAdmin(admin.ModelAdmin):
     list_display = ("name", "default_unit")
     search_fields = ("name",)
+
     def delete_model(self, request, obj):
         try:
             super().delete_model(request, obj)
@@ -44,7 +45,7 @@ class IngredientAdmin(admin.ModelAdmin):
             self.message_user(
                 request,
                 f"Нельзя удалить ингредиент «{obj.name}», так как он используется в рецептах.",
-                level=messages.ERROR
+                level=messages.ERROR,
             )
 
 class RecipeImageInline(admin.TabularInline):
@@ -53,6 +54,13 @@ class RecipeImageInline(admin.TabularInline):
 
 @admin.register(Recipe)
 class RecipeAdmin(admin.ModelAdmin):
+    # на случай, если метод на модели ещё не подхватился — дублируем рендер миниатюры
+    def image_tag(self, obj):
+        if obj.image:
+            return format_html('<img src="{}" style="max-height:60px;"/>', obj.image.url)
+        return "—"
+    image_tag.short_description = "Фото"
+
     list_display = (
         "title",
         "author",
@@ -60,18 +68,18 @@ class RecipeAdmin(admin.ModelAdmin):
         "difficulty",
         "cook_time",
         "rating",
+        "image_tag",
         "created_at",
     )
     list_filter = ("category", "difficulty")
     search_fields = ("title", "description")
     autocomplete_fields = ["author", "category"]
-    readonly_fields = ("rating",)  # рейтинг только для просмотра
+    readonly_fields = ("rating", "image_tag")
     inlines = [RecipeIngredientInline, CommentInline, RatingInline, RecipeImageInline]
 
 
 @admin.register(Comment)
 class CommentAdmin(admin.ModelAdmin):
-    # Добавили показ текста комментария в списке
     list_display = ("recipe", "user", "text", "created_at")
     search_fields = ("text",)
     autocomplete_fields = ["recipe", "user"]
