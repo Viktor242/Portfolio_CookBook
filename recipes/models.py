@@ -187,16 +187,11 @@ class Rating(models.Model):
         super().delete(*args, **kwargs)
         recipe.update_rating()
 
-
-from django.db import models
->>>>>>> feature/search
-
 from django.conf import settings
 from django.db import models
 from django.db.models import PROTECT, Avg
 from django.utils.html import format_html
 from django.utils.text import slugify
-
 
 class Category(models.Model):
     name = models.CharField("Название", max_length=100, unique=True)
