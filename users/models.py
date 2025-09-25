@@ -3,7 +3,7 @@ from django.db import models
 
 
 def user_avatar_upload_to(instance, filename):
-    return f"uploads/avatars/{instance.id or 'new'}/{filename}"
+    return f"avatars/{instance.id or 'new'}/{filename}"
 
 
 class User(AbstractUser):

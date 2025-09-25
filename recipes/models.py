@@ -73,7 +73,7 @@ class Recipe(models.Model):
     # Фото рецепта (опционально)
     image = models.ImageField(
         "Фото блюда",
-        upload_to="recipes/images/",
+        upload_to="recipes/",
         blank=True,
         null=True,
     )
@@ -133,7 +133,7 @@ class RecipeImage(models.Model):
     recipe = models.ForeignKey(
         Recipe, on_delete=models.CASCADE, related_name="images", verbose_name="Рецепт"
     )
-    image = models.ImageField("Изображение", upload_to="recipes/")
+    image = models.ImageField("Изображение", upload_to="recipe_images/")
     is_main = models.BooleanField("Основное", default=False)
     position = models.PositiveIntegerField("Порядок", default=0)
 

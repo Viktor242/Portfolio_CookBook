@@ -5,8 +5,16 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # ── Безопасность ───────────────────────────────────
 SECRET_KEY = 'django-insecure-o5_gb=!zu+6!zkyc4^mrr42%t$@!cunee$k9+m3d4k))d6ltnd'
-DEBUG = True
-ALLOWED_HOSTS = []
+
+# Определяем продакшн окружение
+import os
+DEBUG = os.environ.get('DJANGO_DEBUG', 'True').lower() == 'true'
+
+# Настройки хостов для разных окружений
+if DEBUG:
+    ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
+else:
+    ALLOWED_HOSTS = ['viktor811.pythonanywhere.com']
 
 # ── Приложения ─────────────────────────────────────
 INSTALLED_APPS = [
@@ -88,8 +96,9 @@ STATICFILES_DIRS = [
 ]
 STATIC_ROOT = BASE_DIR / "staticfiles"  # Для collectstatic
 
-MEDIA_URL = "/images/"
-MEDIA_ROOT = BASE_DIR / "static" / "images"
+# Медиа файлы (фотографии рецептов, аватары пользователей)
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / "media"
 
 # ── Настройки по умолчанию ─────────────────────────
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
