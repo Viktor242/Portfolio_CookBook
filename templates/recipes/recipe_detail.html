@@ -2,6 +2,9 @@
 {% block content %}
   <h1>{{ recipe.title }}</h1>
 
+  <!-- Поиск рецептов -->
+  {% include 'search/compact_search_form.html' %}
+
   <h2>Изображения:</h2>
   {% if recipe.images.exists %}
     {% for img in recipe.images.all %}
@@ -51,23 +54,32 @@
       {{ rating_form.as_p }}
       <button type="submit">Оценить</button>
     </form>
-    <h3>Мои коллекции</h3>
-    <ul>
-      {% for c in collections %}
-        <li>
-          {{ c.obj.title }} —
-          {% if c.in_collection %}
-            ✅ Уже в коллекции
-            <a href="{% url 'toggle_recipe_in_collection' c.obj.pk recipe.pk %}">Удалить</a>
-          {% else %}
-            <a href="{% url 'toggle_recipe_in_collection' c.obj.pk recipe.pk %}">Добавить</a>
-          {% endif %}
-        </li>
-      {% empty %}
-        <li>У вас пока нет коллекций. <a href="{% url 'collection_add' %}">Создать</a></li>
-      {% endfor %}
-    </ul>
+    <div class="collection-section">
+      <h3>📚 Добавить в коллекцию</h3>
+      {% if collections %}
+        <div class="collection-buttons">
+          {% for c in collections %}
+            <div class="collection-item">
+              <span class="collection-name">{{ c.obj.title }}</span>
+              {% if c.in_collection %}
+                <a href="{% url 'toggle_recipe_in_collection' c.obj.pk recipe.pk %}" class="btn btn-danger">
+                  ❌ Удалить из коллекции
+                </a>
+              {% else %}
+                <a href="{% url 'toggle_recipe_in_collection' c.obj.pk recipe.pk %}" class="btn btn-success">
+                  ➕ Добавить в коллекцию
+                </a>
+              {% endif %}
+            </div>
+          {% endfor %}
+        </div>
+        <p><a href="{% url 'collection_list' %}" class="btn btn-primary">📋 Управление коллекциями</a></p>
+      {% else %}
+        <p>У вас пока нет коллекций.</p>
+        <p><a href="{% url 'collection_add' %}" class="btn btn-primary">➕ Создать коллекцию</a></p>
+      {% endif %}
+    </div>
   {% else %}
-    <p><a href="{% url 'login' %}">Войдите</a>, чтобы оставить комментарий или оценку.</p>
+    <p><a href="{% url 'users:login' %}">Войдите</a>, чтобы оставить комментарий или оценку.</p>
   {% endif %}
 {% endblock %}

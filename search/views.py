@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 from django.db.models import Q
 from django.core.paginator import Paginator
 from recipes.models import Recipe, Category
@@ -12,7 +12,15 @@ def search_recipes(request):
     has_image = request.GET.get('has_image', '')
     sort_by = request.GET.get('sort', '')
 
-    recipes = Recipe.objects.select_related('author', 'category').prefetch_related('ingredients')
+    # Базовый запрос рецептов
+    recipes = Recipe.objects.select_related('author', 'category').prefetch_related('ingredients', 'images')
+    
+    # Для гостей показываем только публичные рецепты (если есть такое поле)
+    # Если поля is_public нет, показываем все рецепты
+    if not request.user.is_authenticated:
+        # Предполагаем, что есть поле is_public или is_published
+        # Если такого поля нет, можно убрать эту строку
+        recipes = recipes.filter(is_public=True) if hasattr(Recipe, 'is_public') else recipes
 
     # Поиск по тексту
     if query:
@@ -57,9 +65,15 @@ def search_recipes(request):
 
     # Фильтр по наличию картинки
     if has_image == 'yes':
-        recipes = recipes.exclude(image__isnull=True).exclude(image='')  # Только с картинкой
+        # Рецепты с основным изображением ИЛИ с дополнительными изображениями
+        recipes = recipes.filter(
+            Q(image__isnull=False) & ~Q(image='') | Q(images__isnull=False)
+        ).distinct()
     elif has_image == 'no':
-        recipes = recipes.filter(Q(image__isnull=True) | Q(image=''))  # Только без картинки
+        # Рецепты без основного изображения И без дополнительных изображений
+        recipes = recipes.filter(
+            (Q(image__isnull=True) | Q(image='')) & ~Q(images__isnull=False)
+        ).distinct()
 
     # 🔥 СОРТИРОВКА — ключевой шаг!
     sort_options = {
@@ -99,6 +113,7 @@ def search_recipes(request):
         'sort_by': sort_by,
         'has_image': has_image,
         'page_obj': page_obj,  # ← Передаём для пагинации
+        'is_guest': not request.user.is_authenticated,  # Флаг для гостей
     })
 
 def recipe_detail(request, pk):

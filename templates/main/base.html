@@ -1,24 +1,55 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>{% block title %}CookBook{% endblock %}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Кулинарная книга{% endblock %}</title>
+    
+    <!-- Подключение статических файлов -->
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/main.css' %}">
+    
+    <!-- Дополнительные стили для конкретных страниц -->
+    {% block extra_css %}{% endblock %}
 </head>
 <body>
     <header>
-        <h1>CookBook</h1>
+        <h1>Кулинарная книга</h1>
         <nav>
-            <a href="/">Home</a> |
-            <a href="/users/">Users</a> |
-            <a href="/recipes/">Recipes</a> |
-            <a href="/recipes/my-recipes/">My recipes</a> |
-            <a href="/recipes/ingredients/">Ingredients</a> |
-            <a href="/collections/">Collections</a>
+            <a href="/">Главная</a> |
+            <a href="/search/">Рецепты</a> |
+            <a href="/recipes/my-recipes/">Мои рецепты</a> |
+            <a href="/collections/">Коллекции</a>
+            
+            <!-- Навигация пользователя -->
+            {% block user_nav %}
+            <ul>
+                {% if request.user.is_authenticated %}
+                    <li><a href="{% url 'users:me' %}">Личный кабинет</a></li>
+                    <li>
+                        <form method="post" action="{% url 'users:logout' %}" style="display: inline;">
+                            {% csrf_token %}
+                            <button type="submit" style="background: none; border: none; color: white; text-decoration: underline; cursor: pointer; font-size: inherit;">
+                                Выйти
+                            </button>
+                        </form>
+                    </li>
+                {% else %}
+                    <li><a href="{% url 'users:login' %}">Войти</a></li>
+                    <li><a href="{% url 'users:signup' %}">Регистрация</a></li>
+                {% endif %}
+            </ul>
+            {% endblock %}
         </nav>
     </header>
 
     <main>
+        {% block page_title %}{% endblock %}
         {% block content %}{% endblock %}
     </main>
+
+    <!-- Подключение JavaScript -->
+    <script src="{% static 'js/main.js' %}"></script>
+    {% block extra_js %}{% endblock %}
 </body>
 </html>

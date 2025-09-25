@@ -1,0 +1,48 @@
+{% extends "main/base.html" %}
+{% block title %}Личный кабинет{% endblock %}
+
+{% block page_title %}
+  <h1>Личный кабинет</h1>
+{% endblock %}
+
+{% block content %}
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px; border: 1px solid #dee2e6;">
+    <div>
+      <p style="margin: 5px 0 0 0; font-size: 18px; font-weight: bold; color: #28a745;">
+        Привет, {{ user.get_full_name|default:user.username }}! 👋
+      </p>
+    </div>
+    <div>
+      <form method="post" action="{% url 'users:logout' %}" style="display: inline;">
+        {% csrf_token %}
+        <button type="submit" style="padding: 10px 20px; background: #dc3545; color: white; border: none; border-radius: 5px; font-weight: bold; cursor: pointer;">
+          Выйти
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <div style="margin-top: 30px; padding: 20px; background: #ffffff; border-radius: 8px; border: 1px solid #dee2e6;">
+    <h3>Настройки профиля</h3>
+    <form method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+      {{ form.as_p }}
+      <button type="submit" style="padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 5px; font-weight: bold; cursor: pointer;">
+        Сохранить изменения
+      </button>
+    </form>
+  </div>
+
+  {% if collections %}
+    <div style="margin-top: 30px; padding: 20px; background: #ffffff; border-radius: 8px; border: 1px solid #dee2e6;">
+      <h3>Мои коллекции:</h3>
+      <ul style="list-style-type: none; padding: 0;">
+        {% for collection in collections %}
+          <li style="margin: 10px 0; padding: 10px; background: #f8f9fa; border-radius: 5px; border-left: 4px solid #007bff;">
+            <a href="{% url 'collection_detail' collection.pk %}" style="text-decoration: none; color: #007bff; font-weight: bold;">{{ collection.title }}</a>
+          </li>
+        {% endfor %}
+      </ul>
+    </div>
+  {% endif %}
+{% endblock %}

@@ -1,102 +1,145 @@
 {% extends "main/base.html" %}
-{% block content %}
+
+{% block page_title %}
   <h1>{% if editing %}Редактировать рецепт{% else %}Добавить рецепт{% endif %}</h1>
+{% endblock %}
 
-  <form method="post" enctype="multipart/form-data">
-    {% csrf_token %}
-    {{ form.as_p }}
+{% block content %}
 
-    <h3>Ингредиенты</h3>
-    {{ formset.management_form }}
-    <div id="ingredient-list">
-      {% for subform in formset %}
-        <div class="form-row">
-          {{ subform.id }}  {# скрытое поле PK — ОБЯЗАТЕЛЬНО для редактирования существующих записей #}
-          {{ subform.ingredient }} {{ subform.amount }} {{ subform.unit }}
-          {% if subform.DELETE %}
-            {{ subform.DELETE }} <label>Удалить</label>
-          {% endif %}
+  <div class="form-container">
+    <form method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+      
+      <!-- Основные поля рецепта -->
+      <div class="form-group">
+        <label for="{{ form.title.id_for_label }}">Название рецепта *</label>
+        {{ form.title }}
+      </div>
+      
+      <div class="form-group">
+        <label for="{{ form.description.id_for_label }}">Описание</label>
+        {{ form.description }}
+      </div>
+      
+      <div class="form-group">
+        <label for="{{ form.instruction.id_for_label }}">Инструкция приготовления *</label>
+        {{ form.instruction }}
+      </div>
+      
+      <div style="display: flex; gap: 20px;">
+        <div class="form-group" style="flex: 1;">
+          <label for="{{ form.cook_time.id_for_label }}">Время приготовления (мин) *</label>
+          {{ form.cook_time }}
         </div>
-      {% endfor %}
-    </div>
-
-    <p>
-      <button type="button" id="add-form">➕ Добавить ингредиент</button>
-    </p>
-
-    <h3>Изображения</h3>
-    {{ image_formset.management_form }}
-    <div id="image-list">
-      {% for imgform in image_formset %}
-        <div class="form-row">
-          {{ imgform.id }}
-          {{ imgform.image }}
-          {{ imgform.is_main }} <label>Основное</label>
-          {% if imgform.DELETE %}
-            {{ imgform.DELETE }} <label>Удалить</label>
-          {% endif %}
+        
+        <div class="form-group" style="flex: 1;">
+          <label for="{{ form.category.id_for_label }}">Категория</label>
+          {{ form.category }}
         </div>
-      {% endfor %}
-    </div>
+        
+        <div class="form-group" style="flex: 1;">
+          <label for="{{ form.difficulty.id_for_label }}">Сложность</label>
+          {{ form.difficulty }}
+        </div>
+      </div>
 
-    <p>
-      <button type="button" id="add-image-form">➕ Добавить изображение</button>
-    </p>
+      <!-- Ингредиенты -->
+      <h3 style="margin-top: 30px; color: #343a40;">🥘 Ингредиенты</h3>
+      {{ formset.management_form }}
+      <div id="ingredient-list">
+        {% for subform in formset %}
+          <div class="form-row" data-form-index="{{ forloop.counter0 }}">
+            {{ subform.id }}
+            <div class="form-group">
+              <label>Ингредиент *</label>
+              {{ subform.ingredient }}
+            </div>
+            <div class="form-group">
+              <label>Количество *</label>
+              {{ subform.amount }}
+            </div>
+            <div class="form-group">
+              <label>Единица измерения *</label>
+              {{ subform.unit }}
+            </div>
+            <button type="button" class="btn btn-danger btn-sm remove-ingredient" style="padding: 5px 10px; font-size: 12px;">🗑 Удалить</button>
+          </div>
+        {% endfor %}
+      </div>
 
-    <p>
-      <button type="submit">Сохранить</button>
-      <a href="{% url 'recipe_list' %}">Отмена</a>
-    </p>
-  </form>
+      <div style="text-align: center; margin: 15px 0;">
+        <button type="button" id="add-form" class="btn btn-success">➕ Добавить ингредиент</button>
+      </div>
+
+      <!-- Изображения -->
+      <h3 style="margin-top: 30px; color: #343a40;">📸 Изображения</h3>
+      {{ image_formset.management_form }}
+      <div id="image-list">
+        {% for imgform in image_formset %}
+          <div class="form-row" data-form-index="{{ forloop.counter0 }}">
+            {{ imgform.id }}
+            <div class="form-group">
+              <label>Изображение</label>
+              {{ imgform.image }}
+            </div>
+            <div class="form-group">
+              <label style="display: flex; align-items: center; gap: 5px;">
+                {{ imgform.is_main }} Основное изображение
+              </label>
+            </div>
+            <button type="button" class="btn btn-danger btn-sm remove-image" style="padding: 5px 10px; font-size: 12px;">🗑 Удалить</button>
+          </div>
+        {% endfor %}
+      </div>
+
+      <div style="text-align: center; margin: 15px 0;">
+        <button type="button" id="add-image-form" class="btn btn-success">➕ Добавить изображение</button>
+      </div>
+
+      <!-- Кнопки действий -->
+      <div class="form-buttons">
+        <button type="submit" class="btn btn-primary">💾 Сохранить рецепт</button>
+        <a href="{% url 'recipe_list' %}" class="btn btn-secondary">❌ Отмена</a>
+      </div>
+    </form>
+  </div>
 
   <!-- Шаблон пустого ингредиента -->
   <template id="empty-form-template">
-    <div class="form-row">
-      {{ formset.empty_form.as_p }}
+    <div class="form-row" data-form-index="__prefix__">
+      <input type="hidden" name="ingredients-__prefix__-id">
+      <div class="form-group">
+        <label>Ингредиент *</label>
+        {{ formset.empty_form.ingredient }}
+      </div>
+      <div class="form-group">
+        <label>Количество *</label>
+        {{ formset.empty_form.amount }}
+      </div>
+      <div class="form-group">
+        <label>Единица измерения *</label>
+        {{ formset.empty_form.unit }}
+      </div>
+      <button type="button" class="btn btn-danger btn-sm remove-ingredient" style="padding: 5px 10px; font-size: 12px;">🗑 Удалить</button>
     </div>
   </template>
 
   <!-- Шаблон пустого изображения -->
   <template id="empty-image-template">
-    <div class="form-row">
-      {{ image_formset.empty_form.as_p }}
+    <div class="form-row" data-form-index="__prefix__">
+      <input type="hidden" name="images-__prefix__-id">
+      <div class="form-group">
+        <label>Изображение</label>
+        <input type="file" name="images-__prefix__-image" accept="image/*">
+      </div>
+      <div class="form-group">
+        <label style="display: flex; align-items: center; gap: 5px;">
+          <input type="checkbox" name="images-__prefix__-is_main"> Основное изображение
+        </label>
+      </div>
+      <button type="button" class="btn btn-danger btn-sm remove-image" style="padding: 5px 10px; font-size: 12px;">🗑 Удалить</button>
     </div>
   </template>
 
-  <script>
-  document.addEventListener("DOMContentLoaded", function () {
-    // === Ингредиенты ===
-    const addBtn = document.getElementById("add-form");
-    const container = document.getElementById("ingredient-list");
-    const totalForms = document.getElementById("id_ingredients-TOTAL_FORMS");
-    const template = document.getElementById("empty-form-template");
-
-    addBtn.addEventListener("click", function () {
-      const formNum = parseInt(totalForms.value, 10);
-      let newFormHtml = template.content.firstElementChild.outerHTML.replace(/__prefix__/g, formNum);
-      const wrapper = document.createElement("div");
-      wrapper.className = "form-row";
-      wrapper.innerHTML = newFormHtml;
-      container.appendChild(wrapper);
-      totalForms.value = formNum + 1;
-    });
-
-    // === Изображения ===
-    const addImgBtn = document.getElementById("add-image-form");
-    const imgContainer = document.getElementById("image-list");
-    const totalImgForms = document.getElementById("id_images-TOTAL_FORMS");
-    const imgTemplate = document.getElementById("empty-image-template");
-
-    addImgBtn.addEventListener("click", function () {
-      const formNum = parseInt(totalImgForms.value, 10);
-      let newFormHtml = imgTemplate.innerHTML.replace(/__prefix__/g, formNum);
-      const wrapper = document.createElement("div");
-      wrapper.className = "form-row";
-      wrapper.innerHTML = newFormHtml;
-      imgContainer.appendChild(wrapper);
-      totalImgForms.value = formNum + 1;
-    });
-  });
-  </script>
 {% endblock %}
 

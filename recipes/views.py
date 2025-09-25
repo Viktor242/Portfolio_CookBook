@@ -1,12 +1,14 @@
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
-from django.http import HttpResponse, HttpResponseForbidden
+from django.http import HttpResponse, HttpResponseForbidden, JsonResponse
 from django.shortcuts import redirect, render, get_object_or_404
 from django.urls import reverse_lazy
 from django.views.generic import ListView, CreateView, DetailView, UpdateView
+from django.views.decorators.csrf import csrf_exempt
+import json
 
 from recipes.forms import RecipeForm, CommentForm, RatingForm, RecipeIngredientFormSet, RecipeImageFormSet
-from recipes.models import Recipe, Rating, Ingredient
+from recipes.models import Recipe, Rating, Ingredient, Category
 
 PREFIX = "ingredients"
 
@@ -211,3 +213,39 @@ class IngredientCreateView(LoginRequiredMixin, CreateView):
     template_name = "recipes/ingredient_form.html"
     fields = ["name", "default_unit"]
     success_url = reverse_lazy("ingredient_list")
+
+
+class CategoryListView(ListView):
+    """Список всех категорий"""
+    model = Category
+    template_name = "recipes/category_list.html"
+    context_object_name = "categories"
+    paginate_by = 20
+
+    def get_queryset(self):
+        return Category.objects.order_by("name")
+
+
+@csrf_exempt
+def get_ingredient_unit(request):
+    """API endpoint для получения единиц измерения ингредиента"""
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            ingredient_id = data.get('ingredient_id')
+            
+            if ingredient_id:
+                ingredient = get_object_or_404(Ingredient, pk=ingredient_id)
+                return JsonResponse({
+                    'success': True,
+                    'default_unit': ingredient.default_unit or ''
+                })
+            else:
+                return JsonResponse({'success': False, 'error': 'No ingredient ID provided'})
+                
+        except json.JSONDecodeError:
+            return JsonResponse({'success': False, 'error': 'Invalid JSON'})
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)})
+    
+    return JsonResponse({'success': False, 'error': 'Only POST method allowed'})

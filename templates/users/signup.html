@@ -1,0 +1,82 @@
+{% extends "main/base.html" %}
+{% block title %}Регистрация{% endblock %}
+
+{% block user_nav %}
+<!-- Убираем ссылки "Войти" и "Регистрация" на странице регистрации -->
+{% endblock %}
+
+{% block content %}
+  <div class="auth-form-container" style="max-width: 600px;">
+    <h2 class="auth-form-title">Регистрация</h2>
+    <p class="auth-form-subtitle">
+      Создайте аккаунт, чтобы делиться рецептами и создавать коллекции
+    </p>
+    
+    <p class="auth-form-link">
+      Уже есть аккаунт? <a href="{% url 'users:login' %}" style="color: #007bff;">Войти</a>
+    </p>
+    
+    {% if form.errors %}
+      <div class="error-message">
+        <strong>Ошибки в форме:</strong>
+        <ul>
+          {% for field, errors in form.errors.items %}
+            {% for error in errors %}
+              <li>{{ error }}</li>
+            {% endfor %}
+          {% endfor %}
+        </ul>
+      </div>
+    {% endif %}
+    
+    <form method="post" enctype="multipart/form-data" style="margin-top: 20px;">
+      {% csrf_token %}
+      
+      <div class="form-group">
+        <label for="{{ form.username.id_for_label }}">
+          Имя пользователя *
+        </label>
+        <input type="text" name="username" id="{{ form.username.id_for_label }}" class="form-input" required>
+      </div>
+      
+      <div class="form-group">
+        <label for="{{ form.email.id_for_label }}">
+          Email (необязательно)
+        </label>
+        <input type="email" name="email" id="{{ form.email.id_for_label }}" class="form-input">
+      </div>
+      
+      <div class="form-group">
+        <label for="{{ form.password1.id_for_label }}">
+          Пароль *
+        </label>
+        <input type="password" name="password1" id="{{ form.password1.id_for_label }}" class="form-input" required>
+      </div>
+      
+      <div class="form-group">
+        <label for="{{ form.password2.id_for_label }}">
+          Подтверждение пароля *
+        </label>
+        <input type="password" name="password2" id="{{ form.password2.id_for_label }}" class="form-input" required>
+      </div>
+      
+      <div class="form-group">
+        <label for="{{ form.avatar.id_for_label }}">
+          Аватар (необязательно)
+        </label>
+        <input type="file" name="avatar" id="{{ form.avatar.id_for_label }}" accept="image/*" class="form-input">
+      </div>
+      
+      <div class="form-group">
+        <label for="{{ form.bio.id_for_label }}">
+          О себе (необязательно)
+        </label>
+        <textarea name="bio" id="{{ form.bio.id_for_label }}" class="form-textarea" placeholder="Расскажите о себе..."></textarea>
+      </div>
+      
+      <button type="submit" class="btn btn-success" style="width: 100%; padding: 15px; font-size: 16px;">
+        🎉 Создать аккаунт
+      </button>
+    </form>
+  </div>
+{% endblock %}

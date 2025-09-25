@@ -2,6 +2,9 @@
 {% block content %}
   <h1>Ингредиенты</h1>
 
+  <!-- Поиск рецептов -->
+  {% include 'search/compact_search_form.html' %}
+
   <p><a href="{% url 'ingredient_add' %}">➕ Добавить ингредиент</a></p>
 
   <ul>

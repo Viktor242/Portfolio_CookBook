@@ -1,0 +1,9 @@
+{% extends "main/base.html" %}
+{% block title %}Выход{% endblock %}
+{% block content %}
+  <h2>Вы вышли из аккаунта</h2>
+  <p><a href="{% url 'users:login' %}">Войти снова</a></p>
+  
+  <!-- Поиск рецептов -->
+  {% include 'search/compact_search_form.html' %}
+{% endblock %}

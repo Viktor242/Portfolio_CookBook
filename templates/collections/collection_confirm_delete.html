@@ -2,6 +2,10 @@
 {% block content %}
   <h1>Удалить коллекцию</h1>
   <p>Вы уверены, что хотите удалить коллекцию «{{ collection.title }}»?</p>
+  
+  <!-- Поиск рецептов -->
+  {% include 'search/compact_search_form.html' %}
+  
   <form method="post">
     {% csrf_token %}
     <button type="submit">🗑 Да, удалить</button>

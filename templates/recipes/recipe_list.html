@@ -2,32 +2,55 @@
 {% block content %}
   <h1>Все рецепты</h1>
 
-  <ul>
+  <!-- Поиск рецептов -->
+  {% include 'search/compact_search_form.html' %}
+
+  {% if recipes %}
+    <div class="recipe-grid">
     {% for recipe in recipes %}
-      <li>
+        <div class="recipe-card">
+          <h3 class="recipe-title">
         <a href="{% url 'recipe_detail' recipe.pk %}">{{ recipe.title }}</a>
-        — автор: {{ recipe.author }}
-        — рейтинг: {{ recipe.rating }}
-        — {{ recipe.created_at|date:"d.m.Y" }}
-      </li>
-    {% empty %}
-      <li>Рецептов пока нет.</li>
+          </h3>
+          
+          
+          <div class="recipe-meta">
+            <p><strong>👤 Автор:</strong> {{ recipe.author.username }}</p>
+            {% if recipe.category %}
+              <p><strong>📂 Категория:</strong> {{ recipe.category.name }}</p>
+            {% endif %}
+            <p><strong>⭐ Рейтинг:</strong> {{ recipe.rating }}</p>
+            <p><strong>📅 Создан:</strong> {{ recipe.created_at|date:"d.m.Y" }}</p>
+            <p><strong>⏱️ Время:</strong> {{ recipe.cook_time }} мин</p>
+          </div>
+          
+          {% if recipe.description %}
+            <p class="recipe-description">
+              {{ recipe.description|truncatewords:20 }}
+            </p>
+          {% endif %}
+        </div>
     {% endfor %}
-  </ul>
+    </div>
+  {% else %}
+    <div style="text-align: center; padding: 40px; color: #6c757d;">
+      <p style="font-size: 18px;">Рецептов пока нет.</p>
+    </div>
+  {% endif %}
 
   <!-- Пагинация -->
   {% if is_paginated %}
-    <div class="pagination">
+    <div class="pagination" style="text-align: center; margin: 30px 0;">
       {% if page_obj.has_previous %}
-        <a href="?page=1">&laquo; Первая</a>
-        <a href="?page={{ page_obj.previous_page_number }}">Назад</a>
+        <a href="?page=1" style="padding: 8px 12px; margin: 0 5px; background: #007bff; color: white; text-decoration: none; border-radius: 5px;">&laquo; Первая</a>
+        <a href="?page={{ page_obj.previous_page_number }}" style="padding: 8px 12px; margin: 0 5px; background: #007bff; color: white; text-decoration: none; border-radius: 5px;">Назад</a>
       {% endif %}
 
-      <span>Страница {{ page_obj.number }} из {{ page_obj.paginator.num_pages }}</span>
+      <span style="padding: 8px 12px; margin: 0 5px; background: #6c757d; color: white; border-radius: 5px;">Страница {{ page_obj.number }} из {{ page_obj.paginator.num_pages }}</span>
 
       {% if page_obj.has_next %}
-        <a href="?page={{ page_obj.next_page_number }}">Вперёд</a>
-        <a href="?page={{ page_obj.paginator.num_pages }}">Последняя &raquo;</a>
+        <a href="?page={{ page_obj.next_page_number }}" style="padding: 8px 12px; margin: 0 5px; background: #007bff; color: white; text-decoration: none; border-radius: 5px;">Вперёд</a>
+        <a href="?page={{ page_obj.paginator.num_pages }}" style="padding: 8px 12px; margin: 0 5px; background: #007bff; color: white; text-decoration: none; border-radius: 5px;">Последняя &raquo;</a>
       {% endif %}
     </div>
   {% endif %}

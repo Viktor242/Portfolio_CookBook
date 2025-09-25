@@ -1,0 +1,36 @@
+<!-- Компактная форма поиска для главной страницы (без кнопки "Назад") -->
+<div style="margin: 20px 0; padding: 15px; background: #f9f9f9; border-radius: 8px; border: 1px solid #ddd;">
+  <form method="GET" action="{% url 'search' %}" style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+    <input
+      type="text"
+      name="q"
+      placeholder="Поиск рецептов..."
+      value="{{ query|default:'' }}"
+      style="flex: 1; min-width: 200px; padding: 8px; font-size: 16px; border: 1px solid #ccc; border-radius: 4px;"
+    >
+    
+    <select name="category" style="padding: 8px; font-size: 16px; border: 1px solid #ccc; border-radius: 4px;">
+      <option value="">Все категории</option>
+      {% for cat in categories %}
+        <option value="{{ cat.slug }}" {% if selected_category == cat.slug %}selected{% endif %}>
+          {{ cat.name }}
+        </option>
+      {% endfor %}
+    </select>
+    
+    <select name="difficulty" style="padding: 8px; font-size: 16px; border: 1px solid #ccc; border-radius: 4px;">
+      <option value="">Любая сложность</option>
+      <option value="easy" {% if selected_difficulty == 'easy' %}selected{% endif %}>Легко</option>
+      <option value="medium" {% if selected_difficulty == 'medium' %}selected{% endif %}>Средне</option>
+      <option value="hard" {% if selected_difficulty == 'hard' %}selected{% endif %}>Сложно</option>
+    </select>
+    
+    <button type="submit" style="padding: 8px 16px; font-size: 16px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">
+      🔍 Поиск
+    </button>
+    
+    <a href="{% url 'home' %}" style="padding: 8px 16px; font-size: 16px; color: #28a745; text-decoration: none; border: 1px solid #28a745; border-radius: 4px; background: white; cursor: pointer;">
+      🏠 На главную
+    </a>
+  </form>
+</div>

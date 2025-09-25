@@ -1,19 +1,57 @@
 {% extends "main/base.html" %}
-{% block content %}
-  <h1>Мои рецепты</h1>
 
-  <ul>
-    {% for recipe in recipes %}
-      <li>
-        <a href="{% url 'recipe_detail' recipe.pk %}">{{ recipe.title }}</a>
-        — {{ recipe.created_at|date:"d.m.Y" }}
-        <a href="{% url 'recipe_edit' recipe.pk %}">✏ Изменить</a> |
-        <a href="{% url 'recipe_delete' recipe.pk %}">🗑 Удалить</a>
-      </li>
-    {% empty %}
-      <li>У вас пока нет рецептов.</li>
-    {% endfor %}
-  </ul>
+{% block page_title %}
+  <h1>Мои рецепты</h1>
+{% endblock %}
+
+{% block content %}
+
+  <!-- Поиск рецептов -->
+  {% include 'search/compact_search_form.html' %}
+
+  <!-- Кнопка добавления рецепта -->
+  <div style="margin: 20px 0; text-align: center;">
+    <a href="{% url 'recipe_add' %}" style="display: inline-block; padding: 12px 24px; background: #28a745; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 16px;">
+      ➕ Добавить новый рецепт
+    </a>
+  </div>
+
+  {% if recipes %}
+    <div class="recipe-grid">
+      {% for recipe in recipes %}
+        <div class="recipe-card">
+          <h3 class="recipe-title">
+            <a href="{% url 'recipe_detail' recipe.pk %}">{{ recipe.title }}</a>
+          </h3>
+          
+          
+          <div class="recipe-meta">
+            <p><strong>📅 Создан:</strong> {{ recipe.created_at|date:"d.m.Y" }}</p>
+            {% if recipe.category %}
+              <p><strong>📂 Категория:</strong> {{ recipe.category.name }}</p>
+            {% endif %}
+            <p><strong>⭐ Рейтинг:</strong> {{ recipe.rating }}</p>
+            <p><strong>⏱️ Время:</strong> {{ recipe.cook_time }} мин</p>
+          </div>
+          
+          {% if recipe.description %}
+            <p class="recipe-description">
+              {{ recipe.description|truncatewords:20 }}
+            </p>
+          {% endif %}
+          
+          <div class="recipe-actions">
+            <a href="{% url 'recipe_edit' recipe.pk %}" class="btn btn-primary">
+              ✏ Изменить
+            </a>
+            <a href="{% url 'recipe_delete' recipe.pk %}" class="btn btn-danger">
+              🗑 Удалить
+            </a>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
 
   <!-- пагинация -->
   {% if is_paginated %}

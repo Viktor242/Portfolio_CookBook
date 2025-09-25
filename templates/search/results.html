@@ -1,0 +1,90 @@
+{% extends "main/base.html" %}
+{% block title %}Поиск рецептов - Кулинарная книга{% endblock %}
+
+{% block page_title %}
+  <h1>🔍 Поиск рецептов</h1>
+{% endblock %}
+
+{% block content %}
+  
+  <!-- Форма поиска -->
+  {% include 'search/search_form.html' %}
+
+  <!-- ПАГИНАЦИЯ СВЕРХУ -->
+  {% include 'search/pagination.html' %}
+
+  {% if query %}
+    <h2>Результаты поиска: "{{ query }}"</h2>
+  {% else %}
+    <h2>Все рецепты</h2>
+  {% endif %}
+
+  {% if recipes %}
+    <div class="recipe-grid">
+      {% for recipe in recipes %}
+        <div class="recipe-card">
+          <h3 class="recipe-title">
+            <a href="{% url 'recipe_detail' recipe.id %}">{{ recipe.title }}</a>
+          </h3>
+          
+          
+          <div class="recipe-meta">
+            <p><strong>👤 Автор:</strong> {{ recipe.author.username }}</p>
+            <p><strong>📂 Категория:</strong> {{ recipe.category.name|default:"Без категории" }}</p>
+            <p><strong>⚡ Сложность:</strong> {{ recipe.get_difficulty_display }}</p>
+            <p><strong>⭐ Рейтинг:</strong> {{ recipe.rating }}</p>
+            <p><strong>⏱️ Время:</strong> {{ recipe.cook_time }} мин</p>
+          </div>
+          
+          {% if recipe.description %}
+            <p class="recipe-description">
+              {{ recipe.description|truncatewords:20 }}
+            </p>
+          {% endif %}
+          
+          {% if not is_guest %}
+            <div class="recipe-actions">
+              <a href="{% url 'recipe_detail' recipe.id %}" class="btn btn-primary">👁 Просмотр</a>
+              <div class="collection-quick-add">
+                <button class="btn btn-success" onclick="showCollectionModal({{ recipe.id }})">
+                  ➕ В коллекцию
+                </button>
+              </div>
+            </div>
+          {% else %}
+            <div class="recipe-actions">
+              <a href="{% url 'recipe_detail' recipe.id %}" class="btn btn-primary">👁 Просмотр</a>
+            </div>
+          {% endif %}
+        </div>
+      {% endfor %}
+    </div>
+
+    <!-- ПАГИНАЦИЯ СНИЗУ -->
+    {% include 'search/pagination.html' %}
+
+  {% else %}
+    {% if query %}
+      <p style="color: #666; font-style: italic;">Ничего не найдено по запросу "{{ query }}"</p>
+    {% else %}
+      <p style="color: #666; font-style: italic;">Пока нет рецептов в базе данных</p>
+    {% endif %}
+  {% endif %}
+
+  <hr>
+  <div style="display: flex; gap: 15px; margin-top: 20px;">
+    <a href="{% url 'search' %}" style="color: #666; text-decoration: none;">← Назад к поиску</a>
+  </div>
+
+  <!-- Модальное окно для добавления в коллекцию -->
+  {% if not is_guest %}
+    <div id="collectionModal" class="modal" style="display: none;">
+      <div class="modal-content">
+        <span class="close">&times;</span>
+        <h3>📚 Добавить в коллекцию</h3>
+        <div id="modalRecipeInfo"></div>
+        <div id="modalCollections"></div>
+      </div>
+    </div>
+  {% endif %}
+{% endblock %}

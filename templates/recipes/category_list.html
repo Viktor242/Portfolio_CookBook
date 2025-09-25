@@ -1,0 +1,45 @@
+{% extends "main/base.html" %}
+{% block title %}Категории - Кулинарная книга{% endblock %}
+
+{% block page_title %}
+  <h1>📂 Категории рецептов</h1>
+{% endblock %}
+
+{% block content %}
+  <!-- Поиск рецептов -->
+  {% include 'search/compact_search_form.html' %}
+
+  <!-- Список категорий -->
+  <div class="categories-list">
+    <h2 class="categories-title">📋 Все категории ({{ categories.count }})</h2>
+    
+    {% if categories %}
+      {% for category in categories %}
+        <div class="category-item">
+          <div>
+            <div class="category-name">{{ category.name }}</div>
+            <div class="category-slug">slug: {{ category.slug }}</div>
+          </div>
+          <div class="category-count">
+            {{ category.recipes.count }} рецептов
+          </div>
+        </div>
+      {% endfor %}
+    {% else %}
+      <p class="no-categories">
+        Пока нет категорий.
+      </p>
+    {% endif %}
+  </div>
+
+  <!-- Информация -->
+  <div class="categories-info">
+    <h3>ℹ️ Информация о категориях:</h3>
+    <ul>
+      <li><strong>Название категории</strong> - отображается в формах и списках рецептов</li>
+      <li><strong>Slug</strong> - используется для URL и поиска</li>
+      <li><strong>Счетчик рецептов</strong> - показывает, сколько рецептов в каждой категории</li>
+      <li><strong>Использование</strong> - категории доступны при создании рецептов</li>
+    </ul>
+  </div>
+{% endblock %}

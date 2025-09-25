@@ -1,6 +1,13 @@
 {% extends "main/base.html" %}
+
+{% block page_title %}
+  <h1>Коллекции</h1>
+{% endblock %}
+
 {% block content %}
-<h1>Коллекции</h1>
+
+<!-- Поиск рецептов -->
+{% include 'search/compact_search_form.html' %}
 
 <h2>Мои коллекции</h2>
 <p><a href="{% url 'collection_add' %}">➕ Создать коллекцию</a></p>
@@ -29,7 +36,7 @@
       ({{ collection.items.count }} рецептов)
     </li>
   {% empty %}
-    <li>Нет публичных коллекций.</li>
+    <!-- Нет публичных коллекций -->
   {% endfor %}
 </ul>
 {% endblock %}

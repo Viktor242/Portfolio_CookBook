@@ -1,22 +1,94 @@
 {% extends "main/base.html" %}
 
-{% block title %}Home - CookBook{% endblock %}
+{% block title %}Главная - Кулинарная книга{% endblock %}
+
+{% block page_title %}
+  <h1>Добро пожаловать на сайт рецептов!</h1>
+{% endblock %}
 
 {% block content %}
-  <h1>Добро пожаловать на сайт рецептов!</h1>
   <p>Здесь вы можете делиться любимыми рецептами и находить новые идеи.</p>
 
-  <h2>Свежие рецепты:</h2>
-  <ul>
-    {% for recipe in recipes %}
-      <li>
-        <a href="{% url 'recipe_detail' recipe.pk %}">{{ recipe.title }}</a>
-        (автор: {{ recipe.author }}, рейтинг: {{ recipe.rating }})
-      </li>
-    {% empty %}
-      <li>Пока нет рецептов.</li>
-    {% endfor %}
-  </ul>
+  <!-- Простой поиск для гостей -->
+  <div style="margin: 30px 0; padding: 20px; background: #f8f9fa; border-radius: 8px; border: 1px solid #dee2e6;">
+    <h3 style="margin-top: 0; color: #343a40;">🔍 Поиск рецептов</h3>
+    <form method="GET" action="{% url 'search' %}" style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+      <input
+        type="text"
+        name="q"
+        placeholder="Название, ингредиент или категория..."
+        style="flex: 1; min-width: 250px; padding: 10px; font-size: 16px; border: 1px solid #ced4da; border-radius: 5px;"
+      >
+      
+      <select name="category" style="padding: 10px; font-size: 16px; border: 1px solid #ced4da; border-radius: 5px;">
+        <option value="">Все категории</option>
+        {% for cat in categories %}
+          <option value="{{ cat.slug }}">{{ cat.name }}</option>
+        {% endfor %}
+      </select>
+      
+      <button type="submit" style="padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 5px; font-size: 16px; font-weight: bold; cursor: pointer;">
+        Найти
+      </button>
+    </form>
+  </div>
 
-  <p><a href="{% url 'recipe_add' %}">➕ Добавить рецепт</a></p>
+  <h2>Свежие рецепты:</h2>
+  
+  {% if recipes %}
+    <div class="recipe-grid">
+      {% for recipe in recipes %}
+        <div class="recipe-card">
+          <h3 class="recipe-title">
+            <a href="{% url 'recipe_detail' recipe.pk %}">{{ recipe.title }}</a>
+          </h3>
+          
+          
+          <div class="recipe-meta">
+            <p><strong>👤 Автор:</strong> {{ recipe.author.username }}</p>
+            <p><strong>⭐ Рейтинг:</strong> {{ recipe.rating }}</p>
+            {% if recipe.category %}
+              <p><strong>📂 Категория:</strong> {{ recipe.category.name }}</p>
+            {% endif %}
+            <p><strong>⏱️ Время:</strong> {{ recipe.cook_time }} мин</p>
+          </div>
+          
+          {% if recipe.description %}
+            <p class="recipe-description">
+              {{ recipe.description|truncatewords:15 }}
+            </p>
+          {% endif %}
+          
+          <div class="recipe-actions">
+            <a href="{% url 'recipe_detail' recipe.pk %}" class="btn btn-primary">👁 Просмотр</a>
+            {% if user.is_authenticated %}
+              <button class="btn btn-success" onclick="showCollectionModal({{ recipe.pk }})">
+                ➕ В коллекцию
+              </button>
+            {% endif %}
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p style="color: #6c757d; font-style: italic; text-align: center; padding: 40px;">Пока нет рецептов.</p>
+  {% endif %}
+
+  {% if user.is_authenticated %}
+    <p><a href="{% url 'recipe_add' %}">➕ Добавить рецепт</a></p>
+  {% else %}
+    <p><a href="{% url 'users:login' %}">🔑 Войдите</a>, чтобы добавить рецепт</p>
+  {% endif %}
+
+  <!-- Модальное окно для добавления в коллекцию -->
+  {% if user.is_authenticated %}
+    <div id="collectionModal" class="modal" style="display: none;">
+      <div class="modal-content">
+        <span class="close">&times;</span>
+        <h3>📚 Добавить в коллекцию</h3>
+        <div id="modalRecipeInfo"></div>
+        <div id="modalCollections"></div>
+      </div>
+    </div>
+  {% endif %}
 {% endblock %}
