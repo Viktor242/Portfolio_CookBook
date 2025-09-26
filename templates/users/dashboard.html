@@ -2,150 +2,99 @@
 {% block title %}Личный кабинет{% endblock %}
 
 {% block page_title %}
-  <div class="text-center mb-4">
-    <h1 class="display-4 text-primary">
-      <i class="fas fa-user-circle me-2"></i>Личный кабинет
-    </h1>
-  </div>
+  <h1>Личный кабинет</h1>
 {% endblock %}
 
 {% block content %}
   <!-- Приветствие и выход -->
-  <div class="card mb-4">
-    <div class="card-body">
-      <div class="row align-items-center">
-        <div class="col-md-8">
-          <h4 class="card-title text-success mb-0">
-            <i class="fas fa-hand-wave me-2"></i>Привет, {{ user.get_full_name|default:user.username }}! 👋
-          </h4>
-        </div>
-        <div class="col-md-4 text-md-end">
-          <form method="post" action="{% url 'users:logout' %}" class="d-inline">
-            {% csrf_token %}
-            <button type="submit" class="btn btn-danger">
-              <i class="fas fa-sign-out-alt me-1"></i>Выйти
-            </button>
-          </form>
-        </div>
-      </div>
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px; border: 1px solid #dee2e6;">
+    <div>
+      <p style="margin: 5px 0 0 0; font-size: 18px; font-weight: bold; color: #28a745;">
+        Привет, {{ user.get_full_name|default:user.username }}! 👋
+      </p>
     </div>
-  </div>
-
-  <!-- Настройки профиля -->
-  <div class="card mb-4">
-    <div class="card-header bg-primary text-white">
-      <h5 class="card-title mb-0">
-        <i class="fas fa-cog me-2"></i>Настройки профиля
-      </h5>
-    </div>
-    <div class="card-body">
-      <form method="post" enctype="multipart/form-data">
+    <div>
+      <form method="post" action="{% url 'users:logout' %}" style="display: inline;">
         {% csrf_token %}
-        
-        <div class="row">
-          <div class="col-md-6">
-            <div class="mb-3">
-              <label for="{{ form.username.id_for_label }}" class="form-label">
-                <i class="fas fa-user me-1"></i>{{ form.username.label }}
-              </label>
-              {{ form.username }}
-              {% if form.username.help_text %}
-                <div class="form-text">{{ form.username.help_text }}</div>
-              {% endif %}
-            </div>
-          </div>
-          <div class="col-md-6">
-            <div class="mb-3">
-              <label for="{{ form.email.id_for_label }}" class="form-label">
-                <i class="fas fa-envelope me-1"></i>{{ form.email.label }}
-              </label>
-              {{ form.email }}
-            </div>
-          </div>
-        </div>
-
-        <div class="row">
-          <div class="col-md-6">
-            <div class="mb-3">
-              <label for="{{ form.first_name.id_for_label }}" class="form-label">
-                <i class="fas fa-id-card me-1"></i>{{ form.first_name.label }}
-              </label>
-              {{ form.first_name }}
-            </div>
-          </div>
-          <div class="col-md-6">
-            <div class="mb-3">
-              <label for="{{ form.last_name.id_for_label }}" class="form-label">
-                <i class="fas fa-id-card me-1"></i>{{ form.last_name.label }}
-              </label>
-              {{ form.last_name }}
-            </div>
-          </div>
-        </div>
-
-        <div class="row">
-          <div class="col-md-6">
-            <div class="mb-3">
-              <label for="{{ form.avatar.id_for_label }}" class="form-label">
-                <i class="fas fa-image me-1"></i>{{ form.avatar.label }}
-              </label>
-              {{ form.avatar }}
-              {% if form.avatar.help_text %}
-                <div class="form-text">{{ form.avatar.help_text }}</div>
-              {% endif %}
-            </div>
-          </div>
-          <div class="col-md-6">
-            <div class="mb-3">
-              <label for="{{ form.bio.id_for_label }}" class="form-label">
-                <i class="fas fa-info-circle me-1"></i>{{ form.bio.label }}
-              </label>
-              {{ form.bio }}
-              {% if form.bio.help_text %}
-                <div class="form-text">{{ form.bio.help_text }}</div>
-              {% endif %}
-            </div>
-          </div>
-        </div>
-
-        <div class="text-center">
-          <button type="submit" class="btn btn-primary btn-lg">
-            <i class="fas fa-save me-2"></i>Сохранить изменения
-          </button>
-        </div>
+        <button type="submit" style="padding: 10px 20px; background: #dc3545; color: white; border: none; border-radius: 5px; font-weight: bold; cursor: pointer;">
+          Выйти
+        </button>
       </form>
     </div>
   </div>
 
-  <!-- Мои коллекции -->
-  {% if collections %}
-    <div class="card">
-      <div class="card-header bg-success text-white">
-        <h5 class="card-title mb-0">
-          <i class="fas fa-folder me-2"></i>Мои коллекции
-        </h5>
-      </div>
-      <div class="card-body">
-        <div class="row">
-          {% for collection in collections %}
-            <div class="col-md-6 mb-3">
-              <div class="card border-primary">
-                <div class="card-body">
-                  <h6 class="card-title">
-                    <i class="fas fa-folder-open me-2 text-primary"></i>
-                    <a href="{% url 'collection_detail' collection.pk %}" class="text-decoration-none">
-                      {{ collection.title }}
-                    </a>
-                  </h6>
-                  {% if collection.description %}
-                    <p class="card-text text-muted small">{{ collection.description|truncatechars:100 }}</p>
-                  {% endif %}
-                </div>
-              </div>
-            </div>
-          {% endfor %}
+  <!-- Настройки профиля -->
+  <div class="form-container">
+    <h3 style="margin-top: 30px; color: #343a40;">👤 Настройки профиля</h3>
+    <form method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+      
+      <div style="display: flex; gap: 20px;">
+        <div class="form-group" style="flex: 1;">
+          <label for="{{ form.username.id_for_label }}">Имя пользователя *</label>
+          {{ form.username }}
+          {% if form.username.help_text %}
+            <small style="color: #6c757d; font-size: 0.875rem;">{{ form.username.help_text }}</small>
+          {% endif %}
+        </div>
+        
+        <div class="form-group" style="flex: 1;">
+          <label for="{{ form.email.id_for_label }}">Email</label>
+          {{ form.email }}
         </div>
       </div>
+
+      <div style="display: flex; gap: 20px;">
+        <div class="form-group" style="flex: 1;">
+          <label for="{{ form.first_name.id_for_label }}">Имя</label>
+          {{ form.first_name }}
+        </div>
+        
+        <div class="form-group" style="flex: 1;">
+          <label for="{{ form.last_name.id_for_label }}">Фамилия</label>
+          {{ form.last_name }}
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="{{ form.avatar.id_for_label }}">Аватар</label>
+        {{ form.avatar }}
+        {% if form.avatar.help_text %}
+          <small style="color: #6c757d; font-size: 0.875rem;">{{ form.avatar.help_text }}</small>
+        {% endif %}
+      </div>
+
+      <div class="form-group">
+        <label for="{{ form.bio.id_for_label }}">О себе (Bio)</label>
+        {{ form.bio }}
+        {% if form.bio.help_text %}
+          <small style="color: #6c757d; font-size: 0.875rem;">{{ form.bio.help_text }}</small>
+        {% endif %}
+      </div>
+
+      <!-- Кнопки действий -->
+      <div class="form-buttons">
+        <button type="submit" class="btn btn-primary">💾 Сохранить изменения</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Мои коллекции -->
+  {% if collections %}
+    <h3 style="margin-top: 30px; color: #343a40;">📁 Мои коллекции</h3>
+    <div style="display: flex; flex-wrap: wrap; gap: 15px;">
+      {% for collection in collections %}
+        <div style="padding: 15px; background: #f8f9fa; border-radius: 8px; border: 1px solid #dee2e6; min-width: 200px; flex: 1;">
+          <h6 style="margin: 0 0 10px 0; color: #007bff;">
+            <a href="{% url 'collection_detail' collection.pk %}" style="text-decoration: none; color: #007bff;">
+              {{ collection.title }}
+            </a>
+          </h6>
+          {% if collection.description %}
+            <p style="margin: 0; color: #6c757d; font-size: 0.875rem;">{{ collection.description|truncatechars:100 }}</p>
+          {% endif %}
+        </div>
+      {% endfor %}
     </div>
   {% endif %}
 {% endblock %}
