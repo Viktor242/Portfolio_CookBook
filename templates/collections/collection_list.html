@@ -21,7 +21,11 @@
     <li style="margin-bottom: 10px; padding: 10px; background: #f8f9fa; border-radius: 4px; border-left: 4px solid #007bff;">
       <a href="{% url 'collection_detail' collection.pk %}" style="color: #007bff; text-decoration: none; font-weight: bold;">
         <strong>{{ forloop.counter }}</strong> 
-        ({{ collection.items.count }} рецептов)
+        ({{ collection.items.count }} 
+        {% if collection.items.count == 1 %}рецепт
+        {% elif collection.items.count >= 2 and collection.items.count <= 4 %}рецепта
+        {% else %}рецептов
+        {% endif %})
       </a>
       — 
       <a href="{% url 'collection_edit' collection.pk %}" style="color: #007bff; text-decoration: none;">📝 Изменить</a> 
@@ -45,7 +49,11 @@
       <a href="{% url 'collection_detail' collection.pk %}" style="color: #007bff; text-decoration: none; font-weight: bold;">
         <strong>{{ forloop.counter }}</strong>
         — автор: {{ collection.owner.get_full_name|default:collection.owner.username }}
-        ({{ collection.items.count }} рецептов)
+        ({{ collection.items.count }} 
+        {% if collection.items.count == 1 %}рецепт
+        {% elif collection.items.count >= 2 and collection.items.count <= 4 %}рецепта
+        {% else %}рецептов
+        {% endif %})
       </a>
     </li>
   {% empty %}
