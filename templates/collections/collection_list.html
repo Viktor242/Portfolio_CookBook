@@ -8,23 +8,7 @@
 {% block content %}
 
 <!-- Поиск рецептов -->
-<div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 30px; border: 1px solid #dee2e6;">
-  <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
-    <input type="text" placeholder="Поиск рецептов..." style="flex: 1; min-width: 200px; padding: 10px; border: 1px solid #ced4da; border-radius: 4px;">
-    <select style="padding: 10px; border: 1px solid #ced4da; border-radius: 4px;">
-      <option>Все категории</option>
-    </select>
-    <select style="padding: 10px; border: 1px solid #ced4da; border-radius: 4px;">
-      <option>Любая сложность</option>
-    </select>
-    <button style="background: #007bff; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer;">
-      🔍 Поиск
-    </button>
-    <a href="/" style="background: #28a745; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px;">
-      🏠 На главную
-    </a>
-  </div>
-</div>
+{% include 'search/compact_search_form.html' %}
 
 <!-- Мои коллекции -->
 <h2 style="color: #343a40; margin-bottom: 15px;">Мои коллекции</h2>

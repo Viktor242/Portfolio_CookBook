@@ -1,7 +1,7 @@
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse, HttpResponseForbidden
-from recipes.models import Recipe
+from recipes.models import Recipe, Category
 from .models import Collection, CollectionItem
 from .forms import CollectionForm
 
@@ -10,6 +10,7 @@ from .forms import CollectionForm
 def collection_list(request):
     my_collections = request.user.collections.all()
     public_collections = Collection.objects.filter(is_public=True)
+    categories = Category.objects.all()
 
     return render(
         request,
@@ -17,6 +18,7 @@ def collection_list(request):
         {
             "my_collections": my_collections,
             "public_collections": public_collections,
+            "categories": categories,
         },
     )
 
