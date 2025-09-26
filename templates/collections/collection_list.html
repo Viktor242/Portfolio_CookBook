@@ -40,9 +40,7 @@
 <ul style="list-style: none; padding: 0;">
   {% for collection in public_collections %}
     <li style="margin-bottom: 10px; padding: 15px; background: #f8f9fa; border-radius: 4px; border-left: 4px solid #28a745;">
-      <a href="{% url 'collection_detail' collection.pk %}" style="color: #007bff; text-decoration: none; font-weight: bold;">
-        {{ collection.title }}
-      </a>
+      <strong>{{ forloop.counter }}</strong>
       — автор: {{ collection.owner.get_full_name|default:collection.owner.username }}
       ({{ collection.items.count }} рецептов)
     </li>
