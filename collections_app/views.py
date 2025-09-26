@@ -9,7 +9,7 @@ from .forms import CollectionForm
 @login_required
 def collection_list(request):
     my_collections = request.user.collections.all()
-    public_collections = Collection.objects.filter(is_public=True).exclude(owner=request.user)
+    public_collections = Collection.objects.filter(is_public=True)
 
     return render(
         request,
