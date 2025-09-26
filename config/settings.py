@@ -12,9 +12,9 @@ DEBUG = os.environ.get('DJANGO_DEBUG', 'True').lower() == 'true'
 
 # Настройки хостов для разных окружений
 if DEBUG:
-    ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
+    ALLOWED_HOSTS = ['127.0.0.1', 'localhost', 'viktor811.pythonanywhere.com']
 else:
-    ALLOWED_HOSTS = ['viktor811.pythonanywhere.com']
+    ALLOWED_HOSTS = ['viktor811.pythonanywhere.com', '127.0.0.1', 'localhost']
 
 # ── Приложения ─────────────────────────────────────
 INSTALLED_APPS = [
