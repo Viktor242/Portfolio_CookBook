@@ -884,3 +884,29 @@ nav button:hover {
         padding: 12px 15px;
     }
 }
+
+/* Форма оценки */
+.rating-form {
+    margin-bottom: 15px;
+}
+
+.rating-form label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 500;
+}
+
+.rating-form input[type="number"] {
+    width: 100px;
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px;
+}
+
+.rating-form .form-text {
+    display: block;
+    margin-top: 5px;
+    color: #6c757d;
+    font-size: 0.875rem;
+}

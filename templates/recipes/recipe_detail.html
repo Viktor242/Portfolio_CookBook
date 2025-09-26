@@ -1,85 +1,245 @@
 {% extends "main/base.html" %}
 {% block content %}
-  <h1>{{ recipe.title }}</h1>
+  <!-- Заголовок рецепта -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <h1 class="display-4 text-primary">{{ recipe.title }}</h1>
+      <div class="d-flex align-items-center mb-3">
+        <span class="badge bg-secondary me-2">
+          <i class="fas fa-user me-1"></i>{{ recipe.author }}
+        </span>
+        <span class="badge bg-info me-2">
+          <i class="fas fa-clock me-1"></i>{{ recipe.cook_time }} мин
+        </span>
+        <span class="badge bg-warning me-2">
+          <i class="fas fa-star me-1"></i>{{ recipe.rating }}
+        </span>
+        {% if recipe.category %}
+          <span class="badge bg-success">
+            <i class="fas fa-tag me-1"></i>{{ recipe.category }}
+          </span>
+        {% endif %}
+      </div>
+    </div>
+  </div>
 
   <!-- Поиск рецептов -->
-  {% include 'search/compact_search_form.html' %}
+  <div class="row mb-4">
+    <div class="col-12">
+      {% include 'search/compact_search_form.html' %}
+    </div>
+  </div>
 
-  <h2>Изображения:</h2>
-  {% if recipe.images.exists %}
-    {% for img in recipe.images.all %}
-      <img src="{{ img.image.url }}" alt="{{ recipe.title }}" style="max-width:200px;">
-    {% endfor %}
-  {% else %}
-    <p>Нет изображений.</p>
-  {% endif %}
-
-  <p><b>Автор:</b> {{ recipe.author }}</p>
-  <p><b>Описание:</b> {{ recipe.description }}</p>
-  <p><b>Инструкция:</b> {{ recipe.instruction }}</p>
-  <p><b>Время приготовления:</b> {{ recipe.cook_time }} минут</p>
-  <p><b>Сложность:</b> {{ recipe.get_difficulty_display }}</p>
-  <p><b>Категория:</b> {{ recipe.category }}</p>
-  <p><b>Рейтинг:</b> {{ recipe.rating }}</p>
-
-  <h2>Ингредиенты:</h2>
-  <ul>
-    {% for ri in recipe.recipe_ingredients.all %}
-      <li>{{ ri.ingredient.name }} — {{ ri.amount }} {{ ri.unit }}</li>
-    {% empty %}
-      <li>Нет ингредиентов.</li>
-    {% endfor %}
-  </ul>
-
-  <h2>Комментарии:</h2>
-  <ul>
-    {% for comment in comments %}
-      <li><b>{{ comment.user }}:</b> {{ comment.text }} ({{ comment.created_at|date:"d.m.Y H:i" }})</li>
-    {% empty %}
-      <li>Комментариев пока нет.</li>
-    {% endfor %}
-  </ul>
-
-  {% if user.is_authenticated %}
-    <h3>Оставить комментарий:</h3>
-    <form method="post">
-      {% csrf_token %}
-      {{ comment_form.as_p }}
-      <button type="submit">Отправить</button>
-    </form>
-
-    <h3>Поставить оценку:</h3>
-    <form method="post">
-      {% csrf_token %}
-      {{ rating_form.as_p }}
-      <button type="submit">Оценить</button>
-    </form>
-    <div class="collection-section">
-      <h3>📚 Добавить в коллекцию</h3>
-      {% if collections %}
-        <div class="collection-buttons">
-          {% for c in collections %}
-            <div class="collection-item">
-              <span class="collection-name">{{ c.obj.title }}</span>
-              {% if c.in_collection %}
-                <a href="{% url 'toggle_recipe_in_collection' c.obj.pk recipe.pk %}" class="btn btn-danger">
-                  ❌ Удалить из коллекции
-                </a>
-              {% else %}
-                <a href="{% url 'toggle_recipe_in_collection' c.obj.pk recipe.pk %}" class="btn btn-success">
-                  ➕ Добавить в коллекцию
-                </a>
-              {% endif %}
+  <div class="row">
+    <!-- Основная информация -->
+    <div class="col-lg-8">
+      <!-- Изображения -->
+      {% if recipe.images.exists %}
+        <div class="card mb-4">
+          <div class="card-header">
+            <h5 class="card-title mb-0">
+              <i class="fas fa-images me-2"></i>Фотографии
+            </h5>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              {% for img in recipe.images.all %}
+                <div class="col-md-4 mb-3">
+                  <img src="{{ img.image.url }}" alt="{{ recipe.title }}" class="img-fluid rounded">
+                </div>
+              {% endfor %}
             </div>
+          </div>
+        </div>
+      {% endif %}
+
+      <!-- Описание -->
+      <div class="card mb-4">
+        <div class="card-header">
+          <h5 class="card-title mb-0">
+            <i class="fas fa-info-circle me-2"></i>Описание
+          </h5>
+        </div>
+        <div class="card-body">
+          <p class="lead">{{ recipe.description }}</p>
+        </div>
+      </div>
+
+      <!-- Инструкция -->
+      <div class="card mb-4">
+        <div class="card-header">
+          <h5 class="card-title mb-0">
+            <i class="fas fa-list-ol me-2"></i>Инструкция приготовления
+          </h5>
+        </div>
+        <div class="card-body">
+          <p>{{ recipe.instruction }}</p>
+        </div>
+      </div>
+
+      <!-- Комментарии -->
+      <div class="card mb-4">
+        <div class="card-header">
+          <h5 class="card-title mb-0">
+            <i class="fas fa-comments me-2"></i>Комментарии
+          </h5>
+        </div>
+        <div class="card-body">
+          {% for comment in comments %}
+            <div class="border-bottom pb-3 mb-3">
+              <div class="d-flex justify-content-between align-items-start">
+                <strong>{{ comment.user }}</strong>
+                <small class="text-muted">{{ comment.created_at|date:"d.m.Y H:i" }}</small>
+              </div>
+              <p class="mt-2 mb-0">{{ comment.text }}</p>
+            </div>
+          {% empty %}
+            <p class="text-muted">Комментариев пока нет.</p>
           {% endfor %}
         </div>
-        <p><a href="{% url 'collection_list' %}" class="btn btn-primary">📋 Управление коллекциями</a></p>
-      {% else %}
-        <p>У вас пока нет коллекций.</p>
-        <p><a href="{% url 'collection_add' %}" class="btn btn-primary">➕ Создать коллекцию</a></p>
-      {% endif %}
+      </div>
+    </div>
+
+    <!-- Боковая панель -->
+    <div class="col-lg-4">
+      <!-- Ингредиенты -->
+      <div class="card mb-4">
+        <div class="card-header">
+          <h5 class="card-title mb-0">
+            <i class="fas fa-shopping-basket me-2"></i>Ингредиенты
+          </h5>
+        </div>
+        <div class="card-body">
+          {% for ri in recipe.recipe_ingredients.all %}
+            <div class="d-flex justify-content-between align-items-center border-bottom py-2">
+              <span>{{ ri.ingredient.name }}</span>
+              <span class="badge bg-light text-dark">{{ ri.amount }} {{ ri.unit }}</span>
+            </div>
+          {% empty %}
+            <p class="text-muted">Нет ингредиентов.</p>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- Информация о рецепте -->
+      <div class="card mb-4">
+        <div class="card-header">
+          <h5 class="card-title mb-0">
+            <i class="fas fa-info me-2"></i>Информация
+          </h5>
+        </div>
+        <div class="card-body">
+          <div class="row text-center">
+            <div class="col-6">
+              <div class="border-end">
+                <h6 class="text-muted">Сложность</h6>
+                <span class="badge bg-{% if recipe.difficulty == 'easy' %}success{% elif recipe.difficulty == 'medium' %}warning{% else %}danger{% endif %}">
+                  {{ recipe.get_difficulty_display }}
+                </span>
+              </div>
+            </div>
+            <div class="col-6">
+              <h6 class="text-muted">Время</h6>
+              <strong>{{ recipe.cook_time }} мин</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {% if user.is_authenticated %}
+    <div class="card mb-4">
+      <div class="card-header">
+        <h5 class="card-title mb-0">💬 Оставить комментарий</h5>
+      </div>
+      <div class="card-body">
+        <form method="post">
+          {% csrf_token %}
+          <div class="mb-3">
+            <label for="{{ comment_form.text.id_for_label }}" class="form-label">Комментарий:</label>
+            {{ comment_form.text }}
+          </div>
+          <button type="submit" class="btn btn-primary">
+            <i class="fas fa-paper-plane"></i> Отправить
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <div class="card mb-4">
+      <div class="card-header">
+        <h5 class="card-title mb-0">⭐ Поставить оценку</h5>
+      </div>
+      <div class="card-body">
+        <form method="post">
+          {% csrf_token %}
+          <div class="row">
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label for="{{ rating_form.value.id_for_label }}" class="form-label">Оценка (1-5):</label>
+                {{ rating_form.value }}
+                <div class="form-text">Введите число от 1 до 5</div>
+              </div>
+            </div>
+            <div class="col-md-6 d-flex align-items-end">
+              <button type="submit" class="btn btn-success">
+                <i class="fas fa-star"></i> Оценить
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+    <!-- Коллекции -->
+    <div class="card mb-4">
+      <div class="card-header">
+        <h5 class="card-title mb-0">
+          <i class="fas fa-folder me-2"></i>Добавить в коллекцию
+        </h5>
+      </div>
+      <div class="card-body">
+        {% if collections %}
+          <div class="row">
+            {% for c in collections %}
+              <div class="col-md-6 mb-3">
+                <div class="card border">
+                  <div class="card-body">
+                    <h6 class="card-title">{{ c.obj.title }}</h6>
+                    {% if c.in_collection %}
+                      <a href="{% url 'toggle_recipe_in_collection' c.obj.pk recipe.pk %}" class="btn btn-outline-danger btn-sm">
+                        <i class="fas fa-minus me-1"></i>Удалить
+                      </a>
+                    {% else %}
+                      <a href="{% url 'toggle_recipe_in_collection' c.obj.pk recipe.pk %}" class="btn btn-outline-success btn-sm">
+                        <i class="fas fa-plus me-1"></i>Добавить
+                      </a>
+                    {% endif %}
+                  </div>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+          <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+            <a href="{% url 'collection_list' %}" class="btn btn-primary">
+              <i class="fas fa-cog me-1"></i>Управление коллекциями
+            </a>
+          </div>
+        {% else %}
+          <div class="text-center py-4">
+            <i class="fas fa-folder-open fa-3x text-muted mb-3"></i>
+            <p class="text-muted">У вас пока нет коллекций.</p>
+            <a href="{% url 'collection_add' %}" class="btn btn-primary">
+              <i class="fas fa-plus me-1"></i>Создать коллекцию
+            </a>
+          </div>
+        {% endif %}
+      </div>
     </div>
   {% else %}
-    <p><a href="{% url 'users:login' %}">Войдите</a>, чтобы оставить комментарий или оценку.</p>
+    <div class="alert alert-info text-center">
+      <i class="fas fa-info-circle me-2"></i>
+      <a href="{% url 'users:login' %}" class="alert-link">Войдите</a>, чтобы оставить комментарий или оценку.
+    </div>
   {% endif %}
 {% endblock %}
