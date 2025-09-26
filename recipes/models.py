@@ -1,5 +1,6 @@
 from decimal import Decimal, ROUND_HALF_UP
 from django.conf import settings
+from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
 from django.db.models import PROTECT, Avg
 from django.utils.html import format_html
@@ -80,7 +81,7 @@ class Recipe(models.Model):
 
     # Рейтинг считается автоматически по оценкам
     rating = models.DecimalField(
-        "Рейтинг", max_digits=3, decimal_places=2, default=0, editable=False
+        "Рейтинг", max_digits=4, decimal_places=2, default=0, editable=False
     )
 
     created_at = models.DateTimeField("Создано", auto_now_add=True)
@@ -197,7 +198,7 @@ class Rating(models.Model):
         related_name="ratings",
         verbose_name="Пользователь",
     )
-    value = models.PositiveSmallIntegerField("Оценка")
+    value = models.PositiveSmallIntegerField("Оценка", validators=[MinValueValidator(1), MaxValueValidator(5)])
     created_at = models.DateTimeField("Дата", auto_now_add=True)
 
     class Meta:
