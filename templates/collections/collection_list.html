@@ -19,8 +19,10 @@
 <ul style="list-style: none; padding: 0; margin-bottom: 30px;">
   {% for collection in my_collections %}
     <li style="margin-bottom: 10px; padding: 10px; background: #f8f9fa; border-radius: 4px; border-left: 4px solid #007bff;">
-      <strong>{{ forloop.counter }}</strong> 
-      ({{ collection.items.count }} рецептов) 
+      <a href="{% url 'collection_detail' collection.pk %}" style="color: #007bff; text-decoration: none; font-weight: bold;">
+        <strong>{{ forloop.counter }}</strong> 
+        ({{ collection.items.count }} рецептов)
+      </a>
       — 
       <a href="{% url 'collection_edit' collection.pk %}" style="color: #007bff; text-decoration: none;">📝 Изменить</a> 
       | 
@@ -40,9 +42,11 @@
 <ul style="list-style: none; padding: 0;">
   {% for collection in public_collections %}
     <li style="margin-bottom: 10px; padding: 15px; background: #f8f9fa; border-radius: 4px; border-left: 4px solid #28a745;">
-      <strong>{{ forloop.counter }}</strong>
-      — автор: {{ collection.owner.get_full_name|default:collection.owner.username }}
-      ({{ collection.items.count }} рецептов)
+      <a href="{% url 'collection_detail' collection.pk %}" style="color: #007bff; text-decoration: none; font-weight: bold;">
+        <strong>{{ forloop.counter }}</strong>
+        — автор: {{ collection.owner.get_full_name|default:collection.owner.username }}
+        ({{ collection.items.count }} рецептов)
+      </a>
     </li>
   {% empty %}
     <li style="padding: 20px; text-align: center; color: #6c757d; background: #f8f9fa; border-radius: 4px;">
