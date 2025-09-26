@@ -1,42 +1,71 @@
 {% extends "main/base.html" %}
 
 {% block page_title %}
-  <h1>Коллекции</h1>
+  <h1 style="color: #6f42c1; text-align: center; margin-bottom: 20px;">Коллекции</h1>
+  <hr style="border: 1px solid #007bff; margin-bottom: 30px;">
 {% endblock %}
 
 {% block content %}
 
 <!-- Поиск рецептов -->
-{% include 'search/compact_search_form.html' %}
+<div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 30px; border: 1px solid #dee2e6;">
+  <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
+    <input type="text" placeholder="Поиск рецептов..." style="flex: 1; min-width: 200px; padding: 10px; border: 1px solid #ced4da; border-radius: 4px;">
+    <select style="padding: 10px; border: 1px solid #ced4da; border-radius: 4px;">
+      <option>Все категории</option>
+    </select>
+    <select style="padding: 10px; border: 1px solid #ced4da; border-radius: 4px;">
+      <option>Любая сложность</option>
+    </select>
+    <button style="background: #007bff; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer;">
+      🔍 Поиск
+    </button>
+    <a href="/" style="background: #28a745; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px;">
+      🏠 На главную
+    </a>
+  </div>
+</div>
 
-<h2>Мои коллекции</h2>
-<p><a href="{% url 'collection_add' %}">➕ Создать коллекцию</a></p>
-<ul>
+<!-- Мои коллекции -->
+<h2 style="color: #343a40; margin-bottom: 15px;">Мои коллекции</h2>
+<p style="margin-bottom: 20px;">
+  <a href="{% url 'collection_add' %}" style="color: #007bff; text-decoration: none;">➕ Создать коллекцию</a>
+</p>
+
+<ul style="list-style: none; padding: 0; margin-bottom: 30px;">
   {% for collection in my_collections %}
-    <li>
-      <a href="{% url 'collection_detail' collection.pk %}">{{ collection.title }}</a>
-      ({{ collection.items.count }} рецептов)
-      —
-      <a href="{% url 'collection_edit' collection.pk %}">✏️ Изменить</a> |
-      <a href="{% url 'collection_delete' collection.pk %}">🗑 Удалить</a>
+    <li style="margin-bottom: 10px; padding: 10px; background: #f8f9fa; border-radius: 4px; border-left: 4px solid #007bff;">
+      <strong>{{ forloop.counter }}</strong> 
+      ({{ collection.items.count }} рецептов) 
+      — 
+      <a href="{% url 'collection_edit' collection.pk %}" style="color: #007bff; text-decoration: none;">📝 Изменить</a> 
+      | 
+      <a href="{% url 'collection_delete' collection.pk %}" style="color: #dc3545; text-decoration: none;">Удалить</a>
     </li>
   {% empty %}
-    <li>У вас пока нет коллекций.</li>
+    <li style="padding: 20px; text-align: center; color: #6c757d; background: #f8f9fa; border-radius: 4px;">
+      У вас пока нет коллекций.
+    </li>
   {% endfor %}
 </ul>
 
-<hr>
+<hr style="border: 1px solid #dee2e6; margin: 30px 0;">
 
-<h2>Публичные коллекции пользователей</h2>
-<ul>
+<!-- Публичные коллекции пользователей -->
+<h2 style="color: #343a40; margin-bottom: 20px;">Публичные коллекции пользователей</h2>
+<ul style="list-style: none; padding: 0;">
   {% for collection in public_collections %}
-    <li>
-      <a href="{% url 'collection_detail' collection.pk %}">{{ collection.title }}</a>
+    <li style="margin-bottom: 10px; padding: 15px; background: #f8f9fa; border-radius: 4px; border-left: 4px solid #28a745;">
+      <a href="{% url 'collection_detail' collection.pk %}" style="color: #007bff; text-decoration: none; font-weight: bold;">
+        {{ collection.title }}
+      </a>
       — автор: {{ collection.owner.get_full_name|default:collection.owner.username }}
       ({{ collection.items.count }} рецептов)
     </li>
   {% empty %}
-    <!-- Нет публичных коллекций -->
+    <li style="padding: 20px; text-align: center; color: #6c757d; background: #f8f9fa; border-radius: 4px;">
+      Пока нет публичных коллекций.
+    </li>
   {% endfor %}
 </ul>
 {% endblock %}
