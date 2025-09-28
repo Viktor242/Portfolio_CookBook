@@ -161,6 +161,9 @@ main h1 {
     border-radius: 10px;
     border: 1px solid #dee2e6;
     box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    min-height: 200px;
+    display: flex;
+    flex-direction: column;
 }
 
 .form-group {
@@ -848,7 +851,7 @@ nav button:hover {
 /* Стили для кнопок формы рецепта */
 .form-buttons {
     text-align: center;
-    margin-top: 30px;
+    margin-top: auto;
     padding-top: 20px;
     border-top: 1px solid #dee2e6;
     display: flex;
@@ -861,6 +864,124 @@ nav button:hover {
     padding: 12px 20px;
     display: inline-block;
     flex-shrink: 0;
+}
+
+/* Специальные стили для форм на странице рецепта */
+.recipe-forms .form-container {
+    min-height: 250px;
+    margin-bottom: 20px;
+}
+
+.recipe-forms .form-container form {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.recipe-forms .form-group {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.recipe-forms .form-group label {
+    margin-bottom: 10px;
+}
+
+.recipe-forms .form-group input,
+.recipe-forms .form-group textarea {
+    flex-grow: 1;
+    min-height: 40px;
+}
+
+.recipe-forms .form-group textarea {
+    min-height: 80px;
+    resize: vertical;
+}
+
+/* Увеличенный чекбокс для публичной коллекции */
+.form-check input[type="checkbox"] {
+    width: 80px;
+    height: 80px;
+    margin-right: 15px;
+    cursor: pointer;
+    border: 3px solid #0d6efd;
+    border-radius: 8px;
+    outline: none;
+    box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.25);
+    transform: scale(1);
+}
+
+.form-check input[type="checkbox"]:checked {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.5);
+}
+
+.form-check input[type="checkbox"]:focus {
+    box-shadow: 0 0 0 6px rgba(13, 110, 253, 0.5);
+}
+
+/* Стили для модального окна коллекций */
+#collectionModal {
+    position: fixed;
+    z-index: 1055;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.5);
+    display: none;
+    align-items: center;
+    justify-content: center;
+}
+
+#collectionModal.show {
+    display: flex !important;
+}
+
+#collectionModal .modal-content {
+    background-color: #fefefe;
+    margin: auto;
+    padding: 20px;
+    border: 1px solid #888;
+    border-radius: 10px;
+    width: 80%;
+    max-width: 500px;
+    max-height: 80vh;
+    overflow-y: auto;
+    position: relative;
+}
+
+.collections-list {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.collection-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px;
+    margin-bottom: 10px;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    background: #f8f9fa;
+}
+
+.collection-info {
+    flex-grow: 1;
+    margin-right: 15px;
+}
+
+.collection-info h5 {
+    margin: 0 0 5px 0;
+    color: #343a40;
+}
+
+.collection-info p {
+    margin: 0;
+    font-size: 0.9rem;
 }
 
 @media (max-width: 480px) {
@@ -885,15 +1006,64 @@ nav button:hover {
     }
 }
 
-/* Форма оценки */
-.rating-form {
-    margin-bottom: 15px;
+/* Стили для карточек коллекций в личном кабинете */
+.collection-card {
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border-left: 4px solid #007bff;
+    transition: transform 0.2s, box-shadow 0.2s;
+    text-decoration: none;
+    color: inherit;
+    display: block;
 }
 
-.rating-form label {
-    display: block;
-    margin-bottom: 5px;
+.collection-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    text-decoration: none;
+    color: inherit;
+}
+
+.collection-card h5 {
+    margin: 0 0 10px 0;
+    color: #007bff;
+    font-weight: bold;
+}
+
+.collection-card .collection-info {
+    margin: 0;
+    color: #6c757d;
+    font-size: 14px;
+}
+
+.collection-card .collection-count {
+    margin: 5px 0 0 0;
+    color: #6c757d;
+    font-size: 12px;
+}
+
+/* Стили для быстрых действий */
+.quick-actions {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+}
+
+.quick-actions .btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 20px;
     font-weight: 500;
+    text-decoration: none;
+    border-radius: 6px;
+    transition: all 0.2s;
+}
+
+.quick-actions .btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
 }
 
 .rating-form input[type="number"] {
@@ -909,4 +1079,168 @@ nav button:hover {
     margin-top: 5px;
     color: #6c757d;
     font-size: 0.875rem;
+}
+
+/* Стили для модалки выбора ингредиентов */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-content {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    max-width: 500px;
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+.ingredient-item:hover {
+    background-color: #e9ecef !important;
+    border-color: #007bff !important;
+}
+
+.btn-close {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #666;
+}
+
+.btn-close:hover {
+    color: #000;
+}
+
+/* Стили для выравнивания полей ингредиентов */
+.form-row {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 20px;
+    padding: 15px;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    background: #f8f9fa;
+}
+
+.form-row .form-group {
+    margin-bottom: 0;
+}
+
+/* Поле для названия ингредиента - еще шире */
+.form-row .form-group:first-child {
+    flex: 3;
+}
+
+/* Поле для количества - среднее */
+.form-row .form-group:nth-child(2) {
+    flex: 1.5;
+}
+
+/* Поле для единицы измерения - уже */
+.form-row .form-group:nth-child(3) {
+    flex: 0.8;
+}
+
+.form-row .form-group input,
+.form-row .form-group select {
+    height: 38px;
+    padding: 8px 12px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.form-row .btn {
+    height: 38px;
+    padding: 8px 12px;
+    font-size: 14px;
+    line-height: 1.5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.form-row .btn-sm {
+    padding: 6px 10px;
+    font-size: 12px;
+}
+
+/* Специальные стили для кнопок в строке ингредиентов */
+.form-row .select-ingredient {
+    min-width: 120px;
+}
+
+.form-row .remove-ingredient {
+    min-width: 80px;
+}
+
+/* Стили для выравнивания чекбокса с многострочным текстом */
+.form-check {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+}
+
+.form-check-input {
+    margin-top: 2px;
+    flex-shrink: 0;
+}
+
+.form-check-label {
+    line-height: 1.4;
+    margin-bottom: 0;
+}
+
+/* Стили для выравнивания элементов в строке изображений */
+.image-form-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 15px;
+    padding: 10px;
+    border: 1px solid #e9ecef;
+    border-radius: 6px;
+    background: #f8f9fa;
+}
+
+.image-form-row .form-group {
+    margin-bottom: 0;
+    flex: 4;
+}
+
+.image-form-row .btn {
+    flex: 0.8;
+    min-width: 80px;
+}
+
+/* Стили для отображения информации о текущем изображении */
+.current-image-info {
+    margin-top: 5px;
+    padding: 8px;
+    background: #e9ecef;
+    border-radius: 4px;
+    font-size: 14px;
+    border-left: 3px solid #007bff;
+}
+
+.current-image-info strong {
+    color: #007bff;
+}
+
+.current-image-info small {
+    color: #6c757d;
 }

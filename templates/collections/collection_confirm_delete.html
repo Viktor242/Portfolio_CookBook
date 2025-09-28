@@ -1,14 +1,47 @@
 {% extends "main/base.html" %}
+
+{% block page_title %}
+  <div class="text-center mb-4">
+    <h1 class="display-4 text-danger">
+      <i class="fas fa-exclamation-triangle me-3"></i>Удалить коллекцию
+    </h1>
+    <hr class="border-danger" style="width: 200px; margin: 0 auto;">
+  </div>
+{% endblock %}
+
 {% block content %}
-  <h1>Удалить коллекцию</h1>
-  <p>Вы уверены, что хотите удалить коллекцию «{{ collection.title }}»?</p>
-  
-  <!-- Поиск рецептов -->
-  {% include 'search/compact_search_form.html' %}
-  
-  <form method="post">
-    {% csrf_token %}
-    <button type="submit">🗑 Да, удалить</button>
-    <a href="{% url 'collection_list' %}">Отмена</a>
-  </form>
+  <div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+      <div class="card border-danger shadow">
+        <div class="card-header bg-danger text-white text-center">
+          <h4 class="card-title mb-0">
+            <i class="fas fa-folder-minus me-2"></i>Подтверждение удаления
+          </h4>
+        </div>
+        <div class="card-body text-center py-4">
+          <div class="mb-4">
+            <i class="fas fa-folder fa-3x text-muted mb-3"></i>
+            <h5 class="text-dark">Вы уверены, что хотите удалить коллекцию?</h5>
+            <p class="lead text-primary fw-bold">«{{ collection.title }}»</p>
+            <p class="text-muted">
+              <i class="fas fa-info-circle me-1"></i>
+              Это действие нельзя отменить
+            </p>
+          </div>
+          
+          <form method="post" class="d-inline">
+            {% csrf_token %}
+            <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+              <button type="submit" class="btn btn-danger btn-lg me-md-2">
+                <i class="fas fa-trash-alt me-2"></i>Да, удалить
+              </button>
+              <a href="{% url 'collection_list' %}" class="btn btn-outline-secondary btn-lg">
+                <i class="fas fa-times me-2"></i>Отмена
+              </a>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
 {% endblock %}

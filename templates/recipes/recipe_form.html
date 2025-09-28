@@ -7,8 +7,8 @@
 {% block content %}
 
   <div class="form-container">
-    <form method="post" enctype="multipart/form-data">
-      {% csrf_token %}
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
       
       <!-- Основные поля рецепта -->
       <div class="form-group">
@@ -45,14 +45,18 @@
 
       <!-- Ингредиенты -->
       <h3 style="margin-top: 30px; color: #343a40;">🥘 Ингредиенты</h3>
-      {{ formset.management_form }}
-      <div id="ingredient-list">
-        {% for subform in formset %}
+    {{ formset.management_form }}
+    <div id="ingredient-list">
+      {% for subform in formset %}
           <div class="form-row" data-form-index="{{ forloop.counter0 }}">
             {{ subform.id }}
             <div class="form-group">
               <label>Ингредиент *</label>
-              {{ subform.ingredient }}
+              <div style="display: flex; gap: 10px; align-items: center;">
+                <input type="hidden" name="{{ subform.ingredient.html_name }}" value="{{ subform.ingredient.value|default:'' }}" class="ingredient-id-input">
+                <input type="text" class="ingredient-name-display" placeholder="Выберите ингредиент..." readonly style="flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 4px; background: #f8f9fa;">
+                <button type="button" class="btn btn-outline-primary btn-sm select-ingredient" style="padding: 8px 12px;">🔍 Выбрать</button>
+              </div>
             </div>
             <div class="form-group">
               <label>Количество *</label>
@@ -63,9 +67,9 @@
               {{ subform.unit }}
             </div>
             <button type="button" class="btn btn-danger btn-sm remove-ingredient" style="padding: 5px 10px; font-size: 12px;">🗑 Удалить</button>
-          </div>
-        {% endfor %}
-      </div>
+        </div>
+      {% endfor %}
+    </div>
 
       <div style="text-align: center; margin: 15px 0;">
         <button type="button" id="add-form" class="btn btn-success">➕ Добавить ингредиент</button>
@@ -73,24 +77,19 @@
 
       <!-- Изображения -->
       <h3 style="margin-top: 30px; color: #343a40;">📸 Изображения</h3>
-      {{ image_formset.management_form }}
-      <div id="image-list">
-        {% for imgform in image_formset %}
-          <div class="form-row" data-form-index="{{ forloop.counter0 }}">
-            {{ imgform.id }}
+    {{ image_formset.management_form }}
+    <div id="image-list">
+      {% for imgform in image_formset %}
+          <div class="image-form-row" data-form-index="{{ forloop.counter0 }}">
+          {{ imgform.id }}
             <div class="form-group">
               <label>Изображение</label>
-              {{ imgform.image }}
-            </div>
-            <div class="form-group">
-              <label style="display: flex; align-items: center; gap: 5px;">
-                {{ imgform.is_main }} Основное изображение
-              </label>
+          {{ imgform.image }}
             </div>
             <button type="button" class="btn btn-danger btn-sm remove-image" style="padding: 5px 10px; font-size: 12px;">🗑 Удалить</button>
-          </div>
-        {% endfor %}
-      </div>
+        </div>
+      {% endfor %}
+    </div>
 
       <div style="text-align: center; margin: 15px 0;">
         <button type="button" id="add-image-form" class="btn btn-success">➕ Добавить изображение</button>
@@ -101,7 +100,7 @@
         <button type="submit" class="btn btn-primary">💾 Сохранить рецепт</button>
         <a href="{% url 'recipe_list' %}" class="btn btn-secondary">❌ Отмена</a>
       </div>
-    </form>
+  </form>
   </div>
 
   <!-- Шаблон пустого ингредиента -->
@@ -110,7 +109,11 @@
       <input type="hidden" name="ingredients-__prefix__-id">
       <div class="form-group">
         <label>Ингредиент *</label>
-        {{ formset.empty_form.ingredient }}
+        <div style="display: flex; gap: 10px; align-items: center;">
+          <input type="hidden" name="ingredients-__prefix__-ingredient" class="ingredient-id-input">
+          <input type="text" class="ingredient-name-display" placeholder="Выберите ингредиент..." readonly style="flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 4px; background: #f8f9fa;">
+          <button type="button" class="btn btn-outline-primary btn-sm select-ingredient" style="padding: 8px 12px;">🔍 Выбрать</button>
+        </div>
       </div>
       <div class="form-group">
         <label>Количество *</label>
@@ -126,20 +129,50 @@
 
   <!-- Шаблон пустого изображения -->
   <template id="empty-image-template">
-    <div class="form-row" data-form-index="__prefix__">
+    <div class="image-form-row" data-form-index="__prefix__">
       <input type="hidden" name="images-__prefix__-id">
       <div class="form-group">
         <label>Изображение</label>
         <input type="file" name="images-__prefix__-image" accept="image/*">
       </div>
-      <div class="form-group">
-        <label style="display: flex; align-items: center; gap: 5px;">
-          <input type="checkbox" name="images-__prefix__-is_main"> Основное изображение
-        </label>
-      </div>
       <button type="button" class="btn btn-danger btn-sm remove-image" style="padding: 5px 10px; font-size: 12px;">🗑 Удалить</button>
     </div>
   </template>
+
+  <!-- Модалка для выбора ингредиентов -->
+  <div id="ingredientModal" class="modal" style="display: none;">
+    <div class="modal-content" style="max-width: 500px; margin: 50px auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+      <div style="margin-bottom: 20px;">
+        <h3 style="margin: 0; color: #007bff; text-align: center;">🔍 Выбрать ингредиент</h3>
+      </div>
+      
+      <div class="form-group">
+        <label>Поиск ингредиента:</label>
+        <input type="text" id="ingredientSearch" placeholder="Введите название ингредиента..." style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+      </div>
+      
+      <div id="ingredientResults" style="max-height: 300px; overflow-y: auto; margin-top: 15px;">
+        <!-- Результаты поиска будут здесь -->
+      </div>
+      
+      <div id="createNewIngredient" style="display: none; margin-top: 15px; padding: 15px; background: #f8f9fa; border-radius: 4px;">
+        <h5 style="margin-bottom: 10px; color: #007bff;">➕ Создать новый ингредиент</h5>
+        <div class="form-group">
+          <label>Название ингредиента:</label>
+          <input type="text" id="newIngredientName" placeholder="Введите название нового ингредиента..." style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+        </div>
+        <div style="text-align: center; margin-top: 10px;">
+          <button type="button" onclick="createNewIngredient()" class="btn btn-success btn-sm">Создать</button>
+          <button type="button" onclick="hideCreateNew()" class="btn btn-secondary btn-sm">Отмена</button>
+        </div>
+      </div>
+      
+      <div style="text-align: center; margin-top: 20px;">
+        <button type="button" onclick="showCreateNew()" class="btn btn-outline-primary btn-sm" style="margin-right: 10px;">➕ Создать новый</button>
+        <button type="button" onclick="closeIngredientModal()" class="btn btn-secondary">Отмена</button>
+      </div>
+    </div>
+  </div>
 
 {% endblock %}
 

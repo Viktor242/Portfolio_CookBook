@@ -1,7 +1,31 @@
 from django import forms
 from django.forms import inlineformset_factory
+from django.utils.html import format_html
+from django.urls import reverse
 
 from recipes.models import Recipe, Rating, Comment, RecipeIngredient, RecipeImage
+
+
+class ImageFileInput(forms.FileInput):
+    """Кастомный виджет для отображения существующих изображений"""
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+    
+    def render(self, name, value, attrs=None, renderer=None):
+        html = super().render(name, value, attrs, renderer)
+        
+        # Если есть существующее изображение, показываем его название
+        if value and hasattr(value, 'name'):
+            current_file = f"""
+            <div class="current-image-info" style="margin-top: 5px; padding: 8px; background: #e9ecef; border-radius: 4px; font-size: 14px;">
+                <strong>Текущее изображение:</strong> {value.name}
+                <br><small class="text-muted">Выберите новое изображение для замены</small>
+            </div>
+            """
+            html += current_file
+        
+        return format_html(html)
 
 
 class RecipeForm(forms.ModelForm):
@@ -79,23 +103,45 @@ RecipeIngredientFormSet = inlineformset_factory(
     Recipe,
     RecipeIngredient,
     form=RecipeIngredientForm,
+    extra=0,
+    can_delete=True
+)
+
+# Formset для создания нового рецепта (с одним пустым полем)
+RecipeIngredientFormSetCreate = inlineformset_factory(
+    Recipe,
+    RecipeIngredient,
+    form=RecipeIngredientForm,
     extra=1,
     can_delete=True
 )
 
+# Formset для редактирования существующего рецепта (без пустого поля по умолчанию)
 RecipeImageFormSet = inlineformset_factory(
     Recipe,
     RecipeImage,
-    fields=("image", "is_main"),
+    fields=("image",),
+    extra=0,
+    can_delete=True,
+    widgets={
+        'image': ImageFileInput(attrs={
+            'class': 'form-control',
+            'accept': 'image/*'
+        })
+    }
+)
+
+# Formset для создания нового рецепта (с одним пустым полем)
+RecipeImageFormSetCreate = inlineformset_factory(
+    Recipe,
+    RecipeImage,
+    fields=("image",),
     extra=1,
     can_delete=True,
     widgets={
         'image': forms.FileInput(attrs={
             'class': 'form-control',
             'accept': 'image/*'
-        }),
-        'is_main': forms.CheckboxInput(attrs={
-            'class': 'form-check-input'
         })
     }
 )
@@ -113,3 +159,13 @@ class RatingForm(forms.ModelForm):
     class Meta:
         model = Rating
         fields = ["value"]
+        widgets = {
+            'value': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'min': 1,
+                'max': 5,
+                'step': 1,
+                'placeholder': 'Оценка от 1 до 5',
+                'required': True
+            })
+        }

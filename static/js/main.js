@@ -108,7 +108,7 @@ function initImageForms() {
         imgContainer.addEventListener("click", function(e) {
             if (e.target.classList.contains("remove-image")) {
                 e.preventDefault();
-                const formRow = e.target.closest(".form-row");
+                const formRow = e.target.closest(".image-form-row");
                 
                 if (formRow) {
                     // Анимация удаления
@@ -413,23 +413,28 @@ document.head.appendChild(style);
 
 // Функции для работы с коллекциями
 function showCollectionModal(recipeId) {
+    console.log('showCollectionModal called with recipeId:', recipeId);
     const modal = document.getElementById('collectionModal');
     if (modal) {
+        console.log('Modal found, showing...');
+        modal.classList.add('show');
         modal.style.display = 'flex';
         loadCollectionsForRecipe(recipeId);
+    } else {
+        console.error('Modal not found!');
     }
 }
 
 function hideCollectionModal() {
     const modal = document.getElementById('collectionModal');
     if (modal) {
+        modal.classList.remove('show');
         modal.style.display = 'none';
     }
 }
 
 function loadCollectionsForRecipe(recipeId) {
-    // Здесь можно добавить AJAX запрос для загрузки коллекций пользователя
-    // Пока что просто показываем базовую информацию
+    console.log('Loading collections for recipe:', recipeId);
     const recipeInfo = document.getElementById('modalRecipeInfo');
     const collectionsDiv = document.getElementById('modalCollections');
     
@@ -437,12 +442,94 @@ function loadCollectionsForRecipe(recipeId) {
         recipeInfo.innerHTML = `<p><strong>Рецепт ID:</strong> ${recipeId}</p>`;
     }
     
-    if (collectionsDiv) {
-        collectionsDiv.innerHTML = `
-            <p>Для добавления в коллекцию перейдите на страницу рецепта.</p>
-            <a href="/recipes/${recipeId}/" class="btn btn-primary">Перейти к рецепту</a>
-        `;
+    // Загружаем коллекции пользователя через AJAX
+    console.log('Fetching collections from API...');
+    fetch('/collections/api/user-collections/')
+        .then(response => response.json())
+        .then(data => {
+            console.log('API response:', data);
+            if (data.success && data.collections) {
+                displayCollections(data.collections, recipeId);
+            } else {
+                showNoCollectionsMessage(recipeId);
+            }
+        })
+        .catch(error => {
+            console.error('Ошибка загрузки коллекций:', error);
+            showNoCollectionsMessage(recipeId);
+        });
+}
+
+function displayCollections(collections, recipeId) {
+    console.log('displayCollections called with:', collections, recipeId);
+    const collectionsDiv = document.getElementById('modalCollections');
+    
+    if (collections.length === 0) {
+        console.log('No collections found, showing message');
+        showNoCollectionsMessage(recipeId);
+        return;
     }
+    
+    console.log('Displaying', collections.length, 'collections');
+    let html = '<div class="collections-list">';
+    collections.forEach(collection => {
+        html += `
+            <div class="collection-item">
+                <div class="collection-info">
+                    <h5>${collection.title}</h5>
+                    <p class="text-muted">${collection.description || 'Без описания'}</p>
+                </div>
+                <button class="btn btn-primary btn-sm" onclick="addToCollection(${collection.id}, ${recipeId})">
+                    <i class="fas fa-plus"></i> Добавить
+                </button>
+            </div>
+        `;
+    });
+    html += '</div>';
+    
+    collectionsDiv.innerHTML = html;
+    console.log('Collections HTML set');
+}
+
+function showNoCollectionsMessage(recipeId) {
+    const collectionsDiv = document.getElementById('modalCollections');
+    collectionsDiv.innerHTML = `
+        <div class="text-center py-4">
+            <i class="fas fa-folder-open fa-3x text-muted mb-3"></i>
+            <p class="text-muted">У вас пока нет коллекций.</p>
+            <a href="/collections/add/" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Создать коллекцию
+            </a>
+        </div>
+    `;
+}
+
+function addToCollection(collectionId, recipeId) {
+    // Отправляем запрос на добавление рецепта в коллекцию
+    fetch('/collections/api/add-recipe/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify({
+            collection_id: collectionId,
+            recipe_id: recipeId
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Рецепт успешно добавлен в коллекцию!');
+            hideCollectionModal();
+        } else {
+            alert('Ошибка: ' + (data.error || 'Не удалось добавить рецепт'));
+        }
+    })
+    .catch(error => {
+        console.error('Ошибка:', error);
+        alert('Произошла ошибка при добавлении рецепта');
+    });
 }
 
 // Закрытие модального окна
@@ -461,7 +548,220 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         };
     }
+    
+    // Закрытие по клавише Escape
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape' && modal && modal.style.display !== 'none') {
+            hideCollectionModal();
+        }
+    });
+    
+    // Инициализация фильтрации на главной странице
+    initHomePageFilter();
 });
+
+// Функции для фильтрации на главной странице
+function initHomePageFilter() {
+    const applyButton = document.getElementById('apply-filter');
+    const clearButton = document.getElementById('clear-filter');
+    
+    if (applyButton) {
+        applyButton.addEventListener('click', applyFilter);
+    }
+    
+    if (clearButton) {
+        clearButton.addEventListener('click', clearFilter);
+    }
+    
+    // Автоматическая фильтрация при изменении значений
+    const filterSelects = document.querySelectorAll('#filter-form select');
+    filterSelects.forEach(select => {
+        select.addEventListener('change', applyFilter);
+    });
+}
+
+function applyFilter() {
+    const ingredientFilter = document.getElementById('ingredient-filter');
+    const difficultyFilter = document.getElementById('difficulty-filter');
+    const categoryFilter = document.getElementById('category-filter');
+    const applyButton = document.getElementById('apply-filter');
+    
+    const filters = {
+        ingredient_name: ingredientFilter ? ingredientFilter.value.trim() : '',
+        difficulty: difficultyFilter ? difficultyFilter.value : '',
+        category: categoryFilter ? categoryFilter.value : ''
+    };
+    
+    console.log('Applying filters:', filters);
+    
+    // Показываем индикатор загрузки
+    if (applyButton) {
+        const originalText = applyButton.innerHTML;
+        applyButton.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Фильтрация...';
+        applyButton.disabled = true;
+    }
+    
+    // Отправляем AJAX запрос
+    fetch('/recipes/api/search/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify(filters)
+    })
+    .then(response => {
+        console.log('Filter response status:', response.status);
+        return response.json();
+    })
+    .then(data => {
+        console.log('Filter response:', data);
+        if (data.success) {
+            displayFilterResults(data.recipes);
+        } else {
+            console.error('Ошибка фильтрации:', data.error);
+            showFilterError();
+        }
+    })
+    .catch(error => {
+        console.error('Ошибка AJAX фильтрации:', error);
+        showFilterError();
+    })
+    .finally(() => {
+        // Восстанавливаем кнопку
+        if (applyButton) {
+            applyButton.innerHTML = '<i class="fas fa-filter me-1"></i>Применить фильтр';
+            applyButton.disabled = false;
+        }
+    });
+}
+
+function clearFilter() {
+    const ingredientFilter = document.getElementById('ingredient-filter');
+    const difficultyFilter = document.getElementById('difficulty-filter');
+    const categoryFilter = document.getElementById('category-filter');
+    
+    if (ingredientFilter) ingredientFilter.value = '';
+    if (difficultyFilter) difficultyFilter.value = '';
+    if (categoryFilter) categoryFilter.value = '';
+    
+    // Применяем пустой фильтр (показываем все рецепты)
+    applyFilter();
+}
+
+function displayFilterResults(recipes) {
+    const recipesContainer = document.getElementById('recipes-container');
+    if (!recipesContainer) return;
+    
+    // Проверяем, авторизован ли пользователь
+    const isUserAuthenticated = document.body.classList.contains('user-authenticated') || 
+                               document.querySelector('a[href*="logout"]') !== null;
+    
+    if (recipes.length === 0) {
+        recipesContainer.innerHTML = `
+            <div class="text-center py-5">
+                <i class="fas fa-search fa-4x text-muted mb-3"></i>
+                <h4 class="text-muted">Рецепты не найдены</h4>
+                <p class="text-muted">Попробуйте изменить параметры фильтрации</p>
+            </div>
+        `;
+        return;
+    }
+    
+    let html = '<div class="row">';
+    recipes.forEach(recipe => {
+        html += `
+            <div class="col-lg-6 col-md-6 mb-4">
+                <div class="card h-100" style="border-radius: 20px; border: none; box-shadow: 0 2px 10px rgba(0,0,0,0.08); background: white; height: 350px;">
+                    <div class="card-header" style="background: linear-gradient(135deg, #6f42c1, #007bff); height: 6px; border-radius: 20px 20px 0 0; padding: 0;"></div>
+                    
+                    <div class="card-body d-flex flex-column" style="padding: 25px; height: 100%;">
+                        <h5 class="card-title mb-3" style="font-size: 1.3rem; font-weight: 700; color: #2c3e50; line-height: 1.3;">
+                            <a href="${recipe.url}" class="text-decoration-none text-dark">
+                                ${recipe.title}
+                            </a>
+                        </h5>
+                        
+                        <!-- Детали рецепта -->
+                        <div class="mb-3">
+                            <div class="row g-2 mb-2">
+                                <div class="col-4">
+                                    <span class="badge" style="background: #f8f9fa; color: #495057; border-radius: 25px; padding: 6px 10px; font-size: 0.75rem; font-weight: 500;">
+                                        <i class="fas fa-user me-1" style="color: #6c757d;"></i>Автор: ${recipe.author}
+                                    </span>
+                                </div>
+                                ${recipe.category ? `
+                                <div class="col-4">
+                                    <span class="badge" style="background: #f8f9fa; color: #495057; border-radius: 25px; padding: 6px 10px; font-size: 0.75rem; font-weight: 500;">
+                                        <i class="fas fa-folder me-1" style="color: #6c757d;"></i>Категория: ${recipe.category}
+                                    </span>
+                                </div>
+                                ` : ''}
+                                <div class="col-4">
+                                    <span class="badge" style="background: #f8f9fa; color: #495057; border-radius: 25px; padding: 6px 10px; font-size: 0.75rem; font-weight: 500;">
+                                        <i class="fas fa-bolt me-1" style="color: #6c757d;"></i>Сложность: ${recipe.difficulty_display}
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="row g-2">
+                                <div class="col-6">
+                                    <span class="badge" style="background: #f8f9fa; color: #495057; border-radius: 25px; padding: 6px 10px; font-size: 0.75rem; font-weight: 500;">
+                                        <i class="fas fa-star me-1" style="color: #ffc107;"></i>Рейтинг: ${formatRating(recipe.rating)}
+                                    </span>
+                                </div>
+                                <div class="col-6">
+                                    <span class="badge" style="background: #f8f9fa; color: #495057; border-radius: 25px; padding: 6px 10px; font-size: 0.75rem; font-weight: 500;">
+                                        <i class="fas fa-clock me-1" style="color: #6c757d;"></i>Время: ${recipe.cook_time} мин
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        ${recipe.description ? `
+                            <p class="card-text text-muted flex-grow-1 mb-3" style="font-size: 0.9rem; line-height: 1.5; color: #6c757d;">
+                                ${recipe.description}
+                            </p>
+                        ` : ''}
+                        
+                        <div class="mt-auto">
+                            <div class="d-flex gap-2">
+                                <a href="${recipe.url}" class="btn flex-fill" style="background: linear-gradient(135deg, #6f42c1, #5a32a3); border: none; border-radius: 25px; padding: 12px 20px; color: white; font-weight: 600; text-decoration: none; transition: all 0.3s ease;">
+                                    <i class="fas fa-eye me-1"></i>Просмотр
+                                </a>
+                                ${isUserAuthenticated ? `
+                                <button class="btn flex-fill" onclick="showCollectionModal(${recipe.id})" style="background: linear-gradient(135deg, #28a745, #20c997); border: none; border-radius: 25px; padding: 12px 20px; color: white; font-weight: 600; transition: all 0.3s ease;">
+                                    <i class="fas fa-plus me-1"></i>В коллекцию
+                                </button>
+                                ` : ''}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+    html += '</div>';
+    
+    recipesContainer.innerHTML = html;
+}
+
+function formatRating(rating) {
+    // Форматируем рейтинг с одним знаком после запятой
+    return parseFloat(rating).toFixed(1);
+}
+
+function showFilterError() {
+    const recipesContainer = document.getElementById('recipes-container');
+    if (!recipesContainer) return;
+    
+    recipesContainer.innerHTML = `
+        <div class="text-center py-5">
+            <i class="fas fa-exclamation-triangle fa-4x text-warning mb-3"></i>
+            <h4 class="text-muted">Ошибка фильтрации</h4>
+            <p class="text-muted">Попробуйте повторить запрос позже</p>
+        </div>
+    `;
+}
 
 // Автоматический выбор единиц измерения на основе ингредиента
 function initIngredientUnitSelection() {
@@ -536,6 +836,213 @@ function getCookie(name) {
         }
     }
     return cookieValue;
+}
+
+// Функции для работы с модалкой выбора ингредиентов
+let currentIngredientRow = null;
+
+function openIngredientModal(button) {
+    currentIngredientRow = button.closest('.form-row');
+    document.getElementById('ingredientModal').style.display = 'block';
+    document.getElementById('ingredientSearch').value = '';
+    document.getElementById('ingredientResults').innerHTML = '';
+    document.getElementById('ingredientSearch').focus();
+}
+
+function closeIngredientModal() {
+    document.getElementById('ingredientModal').style.display = 'none';
+    currentIngredientRow = null;
+}
+
+function searchIngredients(query) {
+    if (query.length < 2) {
+        document.getElementById('ingredientResults').innerHTML = '';
+        return;
+    }
+    
+    fetch('/recipes/api/search-ingredients/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify({ query: query })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            displayIngredientResults(data.ingredients);
+        } else {
+            console.error('Ошибка поиска ингредиентов:', data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Ошибка при поиске ингредиентов:', error);
+    });
+}
+
+function displayIngredientResults(ingredients) {
+    const resultsDiv = document.getElementById('ingredientResults');
+    
+    if (ingredients.length === 0) {
+        resultsDiv.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">Ингредиенты не найдены</p>';
+        return;
+    }
+    
+    let html = '';
+    ingredients.forEach(ingredient => {
+        html += `
+            <div class="ingredient-item" onclick="selectIngredient(${ingredient.id}, '${ingredient.name}')" 
+                 style="padding: 10px; border: 1px solid #ddd; margin: 5px 0; border-radius: 4px; cursor: pointer; background: #f8f9fa;">
+                <strong>${ingredient.name}</strong>
+            </div>
+        `;
+    });
+    
+    resultsDiv.innerHTML = html;
+}
+
+function selectIngredient(ingredientId, ingredientName) {
+    if (currentIngredientRow) {
+        // Находим элементы в текущей строке
+        const idInput = currentIngredientRow.querySelector('.ingredient-id-input');
+        const nameDisplay = currentIngredientRow.querySelector('.ingredient-name-display');
+        
+        if (idInput && nameDisplay) {
+            idInput.value = ingredientId;
+            nameDisplay.value = ingredientName;
+        }
+    }
+    
+    closeIngredientModal();
+}
+
+// Инициализация при загрузке страницы
+document.addEventListener('DOMContentLoaded', function() {
+    // Обработчики для кнопок выбора ингредиентов
+    document.addEventListener('click', function(e) {
+        if (e.target.classList.contains('select-ingredient')) {
+            openIngredientModal(e.target);
+        }
+    });
+    
+    // Обработчик для поиска ингредиентов
+    const searchInput = document.getElementById('ingredientSearch');
+    if (searchInput) {
+        let searchTimeout;
+        searchInput.addEventListener('input', function() {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                searchIngredients(this.value);
+            }, 300); // Задержка 300мс для оптимизации
+        });
+    }
+    
+    // Закрытие модалки при клике вне её
+    document.getElementById('ingredientModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeIngredientModal();
+        }
+    });
+    
+    // Загружаем названия ингредиентов для существующих полей
+    loadExistingIngredientNames();
+});
+
+function loadExistingIngredientNames() {
+    // Находим все скрытые поля с ID ингредиентов
+    const ingredientIdInputs = document.querySelectorAll('.ingredient-id-input');
+    
+    ingredientIdInputs.forEach(input => {
+        if (input.value) {
+            // Получаем название ингредиента по ID
+            fetch('/recipes/api/search-ingredients/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({ query: '' })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Находим ингредиент по ID
+                    const ingredient = data.ingredients.find(ing => ing.id == input.value);
+                    if (ingredient) {
+                        const nameDisplay = input.closest('.form-row').querySelector('.ingredient-name-display');
+                        if (nameDisplay) {
+                            nameDisplay.value = ingredient.name;
+                        }
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Ошибка при загрузке названия ингредиента:', error);
+            });
+        }
+    });
+}
+
+// Функции для создания нового ингредиента
+function showCreateNew() {
+    document.getElementById('createNewIngredient').style.display = 'block';
+    document.getElementById('newIngredientName').focus();
+}
+
+function hideCreateNew() {
+    document.getElementById('createNewIngredient').style.display = 'none';
+    document.getElementById('newIngredientName').value = '';
+}
+
+function createNewIngredient() {
+    const name = document.getElementById('newIngredientName').value.trim();
+    
+    if (!name) {
+        alert('Введите название ингредиента');
+        return;
+    }
+    
+    fetch('/recipes/api/create-ingredient/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify({ name: name })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Выбираем созданный ингредиент
+            selectIngredient(data.ingredient.id, data.ingredient.name);
+            hideCreateNew();
+        } else {
+            // Показываем ошибку с возможностью исправить
+            let errorMessage = data.error;
+            
+            // Если есть похожие ингредиенты, предлагаем их выбрать
+            if (data.similar && data.similar.length > 0) {
+                const similarList = data.similar.map(ing => `"${ing}"`).join(', ');
+                errorMessage += `\n\nВозможно, вы имели в виду: ${similarList}?`;
+                
+                // Предлагаем выбрать из похожих
+                const choice = confirm(errorMessage + '\n\nНажмите OK, чтобы выбрать из похожих ингредиентов, или Отмена, чтобы исправить название.');
+                
+                if (choice) {
+                    // Показываем похожие ингредиенты в результатах поиска
+                    displayIngredientResults(data.similar.map(name => ({ id: 0, name: name })));
+                    hideCreateNew();
+                }
+            } else {
+                alert('Ошибка: ' + errorMessage);
+            }
+        }
+    })
+    .catch(error => {
+        console.error('Ошибка при создании ингредиента:', error);
+        alert('Произошла ошибка при создании ингредиента');
+    });
 }
 
 // Инициализируем при загрузке страницы

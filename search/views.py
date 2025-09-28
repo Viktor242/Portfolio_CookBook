@@ -27,14 +27,15 @@ def search_recipes(request):
         words = query.split()
         q_objects = Q()
 
+        # Ищем рецепты, которые содержат ВСЕ слова из запроса
         for word in words:
-            q_objects |= (
-                    Q(title__iregex=word) |  # iregex вместо icontains
-                    Q(description__iregex=word) |
-                    Q(instruction__iregex=word) |
-                    Q(category__name__iregex=word) |
-                    Q(author__username__iregex=word) |
-                    Q(ingredients__name__iregex=word)
+            # Используем регулярные выражения для поиска полных слов
+            # \b - граница слова, \w - буквенно-цифровые символы
+            word_pattern = r'\b' + word + r'\b'
+            q_objects &= (
+                    Q(title__iregex=word_pattern) |
+                    Q(ingredients__name__iregex=word_pattern) |
+                    Q(author__username__iregex=word_pattern)
             )
 
         recipes = recipes.filter(q_objects).distinct()

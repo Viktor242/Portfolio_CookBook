@@ -7,8 +7,6 @@
 
 {% block content %}
 
-<!-- Поиск рецептов -->
-{% include 'search/compact_search_form.html' %}
 
 <!-- Мои коллекции -->
 <h2 style="color: #343a40; margin-bottom: 15px;">Мои коллекции</h2>
@@ -20,7 +18,7 @@
   {% for collection in my_collections %}
     <li style="margin-bottom: 10px; padding: 10px; background: #f8f9fa; border-radius: 4px; border-left: 4px solid #007bff;">
       <a href="{% url 'collection_detail' collection.pk %}" style="color: #007bff; text-decoration: none; font-weight: bold;">
-        <strong>{{ forloop.counter }}</strong> 
+        <strong>{{ forloop.counter }}</strong> — {{ collection.title }}
         ({{ collection.items.count }} 
         {% if collection.items.count == 1 %}рецепт
         {% elif collection.items.count >= 2 and collection.items.count <= 4 %}рецепта
@@ -47,9 +45,9 @@
   {% for collection in public_collections %}
     <li style="margin-bottom: 10px; padding: 15px; background: #f8f9fa; border-radius: 4px; border-left: 4px solid #28a745;">
       <a href="{% url 'collection_detail' collection.pk %}" style="color: #007bff; text-decoration: none; font-weight: bold;">
-        <strong>{{ forloop.counter }}</strong>
-        — автор: {{ collection.owner.get_full_name|default:collection.owner.username }}
-        ({{ collection.items.count }} 
+        <strong>{{ forloop.counter }}</strong> — {{ collection.title }}
+        (автор: {{ collection.owner.get_full_name|default:collection.owner.username }}, 
+        {{ collection.items.count }} 
         {% if collection.items.count == 1 %}рецепт
         {% elif collection.items.count >= 2 and collection.items.count <= 4 %}рецепта
         {% else %}рецептов

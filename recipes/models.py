@@ -71,13 +71,6 @@ class Recipe(models.Model):
         default="easy",
     )
 
-    # Фото рецепта (опционально)
-    image = models.ImageField(
-        "Фото блюда",
-        upload_to="recipes/",
-        blank=True,
-        null=True,
-    )
 
     # Рейтинг считается автоматически по оценкам
     rating = models.DecimalField(
