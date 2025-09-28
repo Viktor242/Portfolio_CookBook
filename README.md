@@ -103,28 +103,28 @@ CookBook/
 ## 🔧 Установка и запуск
 
 ### Локальная разработка
-```bash
+   ```bash
 # Клонирование проекта
 git clone <repository>
-cd CookBook
+   cd CookBook
 
 # Виртуальное окружение
-python -m venv .venv
+   python -m venv .venv
 source .venv/bin/activate  # Linux/Mac
 # или
 .venv\Scripts\activate     # Windows
 
 # Установка зависимостей
-pip install -r requirements.txt
+   pip install -r requirements.txt
 
 # Миграции базы данных
-python manage.py migrate
+   python manage.py migrate
 
 # Создание суперпользователя
 python manage.py createsuperuser
 
 # Запуск сервера
-python manage.py runserver
+   python manage.py runserver
 ```
 
 ### Продакшн развертывание на PythonAnywhere
