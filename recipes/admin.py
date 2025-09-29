@@ -57,8 +57,9 @@ class RecipeImageInline(admin.TabularInline):
 class RecipeAdmin(admin.ModelAdmin):
     # на случай, если метод на модели ещё не подхватился — дублируем рендер миниатюры
     def image_tag(self, obj):
-        if obj.image:
-            return format_html('<img src="{}" style="max-height:60px;"/>', obj.image.url)
+        if obj.images.exists():
+            first_image = obj.images.first()
+            return format_html('<img src="{}" style="max-height:60px;"/>', first_image.image.url)
         return "—"
     image_tag.short_description = "Фото"
 
