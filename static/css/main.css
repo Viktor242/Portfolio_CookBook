@@ -1249,14 +1249,77 @@ nav button:hover {
 .collection-form .form-check-input {
     width: 24px !important;
     height: 24px !important;
-    transform: scale(1.5);
-    margin-right: 15px;
+    transform: scale(1.5) !important;
+    margin-right: 15px !important;
+    margin-top: 0 !important;
 }
 
 .collection-form .form-check-label {
-    font-size: 18px;
-    font-weight: 500;
-    display: flex;
-    align-items: center;
-    gap: 8px;
+    font-size: 18px !important;
+    font-weight: 500 !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    margin-bottom: 0 !important;
+}
+
+/* Дополнительные стили для лучшего отображения */
+.collection-form .form-check {
+    display: flex !important;
+    align-items: center !important;
+    margin-bottom: 1rem !important;
+}
+
+.collection-form .form-check-input:checked {
+    background-color: #007bff !important;
+    border-color: #007bff !important;
+}
+
+/* Fallback стили для PythonAnywhere */
+.pythonanywhere-fallback .form-check-input {
+    width: 24px !important;
+    height: 24px !important;
+    transform: scale(1.5) !important;
+    margin-right: 15px !important;
+}
+
+.pythonanywhere-fallback .form-check-label {
+    font-size: 18px !important;
+    font-weight: 500 !important;
+}
+
+/* Стили для простой модалки ингредиентов */
+#simpleIngredientModal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    display: none;
+    z-index: 9999;
+}
+
+#simpleIngredientModal .modal-content {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    max-width: 500px;
+    width: 90%;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+/* Стили для кнопок в простом режиме */
+.simple-mode-btn {
+    background: #28a745 !important;
+    color: white !important;
+    border: none !important;
+    padding: 5px 10px !important;
+    border-radius: 4px !important;
+    font-size: 12px !important;
+    margin-left: 10px !important;
 }

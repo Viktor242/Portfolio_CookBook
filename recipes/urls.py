@@ -2,7 +2,7 @@
 from django.urls import path
 from .views import RecipeDetailView, RecipeListView, MyRecipesView, \
     IngredientListView, IngredientCreateView, recipe_create, recipe_edit, recipe_delete, \
-    CategoryListView, get_ingredient_unit, api_search_recipes, api_search_ingredients, api_create_ingredient, ingredient_management
+    CategoryListView, get_ingredient_unit, get_ingredient_name, api_search_recipes, api_search_ingredients, api_create_ingredient, ingredient_management
 
 urlpatterns = [
     path("", RecipeListView.as_view(), name="recipe_list"),
@@ -15,6 +15,7 @@ urlpatterns = [
     path("ingredients/add/", IngredientCreateView.as_view(), name="ingredient_add"),
     path("categories/", CategoryListView.as_view(), name="category_list"),
     path("api/ingredient-unit/", get_ingredient_unit, name="get_ingredient_unit"),
+    path("api/ingredient-name/<int:ingredient_id>/", get_ingredient_name, name="get_ingredient_name"),
     path("api/search/", api_search_recipes, name="api_search_recipes"),
     path("api/search-ingredients/", api_search_ingredients, name="api_search_ingredients"),
     path("api/create-ingredient/", api_create_ingredient, name="api_create_ingredient"),

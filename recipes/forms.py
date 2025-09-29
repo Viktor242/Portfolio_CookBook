@@ -62,6 +62,7 @@ class RecipeForm(forms.ModelForm):
             })
         }
 
+
 class RecipeIngredientForm(forms.ModelForm):
     UNIT_CHOICES = [
         ('', 'Ед. изм.'),
@@ -99,7 +100,9 @@ class RecipeIngredientForm(forms.ModelForm):
             })
         }
 
-RecipeIngredientFormSet = inlineformset_factory(
+
+# Создаем базовый formset
+RecipeIngredientFormSetBase = inlineformset_factory(
     Recipe,
     RecipeIngredient,
     form=RecipeIngredientForm,
@@ -107,17 +110,70 @@ RecipeIngredientFormSet = inlineformset_factory(
     can_delete=True
 )
 
+# Кастомный formset для обработки дубликатов ингредиентов
+class RecipeIngredientFormSet(RecipeIngredientFormSetBase):
+    def clean(self):
+        """Кастомная валидация для обработки пустых форм и дубликатов"""
+        # Сначала обрабатываем пустые формы
+        for form in self.forms:
+            if form.cleaned_data:
+                # Если форма пустая (нет ингредиента или количества), помечаем для удаления
+                if not form.cleaned_data.get('ingredient') or not form.cleaned_data.get('amount'):
+                    form.cleaned_data['DELETE'] = True
+                    # Очищаем ошибки для пустых форм
+                    form._errors = {}
+            else:
+                # Если cleaned_data пустой, создаем пустой словарь с DELETE=True
+                form.cleaned_data = {'DELETE': True}
+                form._errors = {}
+        
+        # Вызываем стандартную валидацию
+        cleaned_data = super().clean()
+        
+        # Проверяем дубликаты ингредиентов
+        ingredients = []
+        deleted_ingredient_ids = []
+        duplicate_ingredients = []
+        
+        for form in self.forms:
+            if (form.cleaned_data and 
+                form.cleaned_data.get('ingredient') and 
+                form.cleaned_data.get('amount') and
+                not form.cleaned_data.get('DELETE')):
+                # Добавляем ингредиент в список для проверки дубликатов
+                ingredient = form.cleaned_data.get('ingredient')
+                ingredient_id = ingredient.pk
+                ingredient_name = ingredient.name
+                
+                if ingredient_id in ingredients:
+                    duplicate_ingredients.append(ingredient_name)
+                else:
+                    ingredients.append(ingredient_id)
+        
+        # Если есть дубликаты, показываем предупреждение
+        if duplicate_ingredients:
+            duplicate_names = ', '.join(duplicate_ingredients)
+            raise forms.ValidationError(
+                f"⚠️ Внимание: Ингредиенты '{duplicate_names}' добавлены несколько раз. "
+                f"Удалите дубликаты или выберите другие ингредиенты."
+            )
+        
+        return cleaned_data
+    
+    
+
 # Formset для создания нового рецепта (с одним пустым полем)
 RecipeIngredientFormSetCreate = inlineformset_factory(
     Recipe,
     RecipeIngredient,
     form=RecipeIngredientForm,
+    formset=RecipeIngredientFormSet,
     extra=1,
     can_delete=True
 )
 
-# Formset для редактирования существующего рецепта (без пустого поля по умолчанию)
-RecipeImageFormSet = inlineformset_factory(
+# Кастомный формсет для изображений с правильной обработкой удаления
+class RecipeImageFormSetBase(inlineformset_factory(
     Recipe,
     RecipeImage,
     fields=("image",),
@@ -129,10 +185,73 @@ RecipeImageFormSet = inlineformset_factory(
             'accept': 'image/*'
         })
     }
-)
+)):
+    def clean(self):
+        """Кастомная валидация для обработки удаления изображений"""
+        for form in self.forms:
+            if form.cleaned_data and form.cleaned_data.get('DELETE', False):
+                # Если изображение помечено для удаления, очищаем поле image
+                form.cleaned_data['image'] = None
+        return super().clean()
+    
+    def is_valid(self):
+        """Переопределяем is_valid для правильной обработки пустых форм и удаления"""
+        # Сначала вызываем стандартную валидацию
+        valid = super().is_valid()
+        
+        if not valid:
+            # Проверяем, есть ли ошибки только из-за пустых форм или удаления
+            for form in self.forms:
+                if hasattr(form, 'cleaned_data') and form.cleaned_data:
+                    # Если форма пустая (нет изображения) или помечена для удаления, очищаем ошибки
+                    if not form.cleaned_data.get('image') or form.cleaned_data.get('DELETE', False):
+                        form._errors = {}
+                elif not hasattr(form, 'cleaned_data') or not form.cleaned_data:
+                    # Пустая форма - считаем валидной
+                    form._errors = {}
+            
+            # Проверяем, остались ли ошибки после очистки пустых форм
+            has_errors = any(form.errors for form in self.forms)
+            return not has_errors
+        
+        return valid
+    
+    def save(self, commit=True):
+        """Переопределяем save для правильного удаления изображений"""
+        if not self.is_valid():
+            return self.save_existing_objects(commit) and self.save_new_objects(commit)
+        
+        print(f"DEBUG: RecipeImageFormSet save() - commit={commit}")
+        print(f"DEBUG: Количество форм: {len(self.forms)}")
+        
+        # Обрабатываем удаление изображений
+        deleted_objects = []
+        for i, form in enumerate(self.forms):
+            print(f"DEBUG: Форма {i}: cleaned_data={form.cleaned_data}")
+            if form.cleaned_data and form.cleaned_data.get('DELETE', False):
+                if form.instance.pk:
+                    print(f"DEBUG: Помечено для удаления: {form.instance.pk}")
+                    deleted_objects.append(form.instance)
+                else:
+                    print(f"DEBUG: Форма помечена для удаления, но нет instance.pk")
+        
+        print(f"DEBUG: Объектов для удаления: {len(deleted_objects)}")
+        
+        # Удаляем помеченные объекты
+        for obj in deleted_objects:
+            print(f"DEBUG: Удаляем объект {obj.pk}")
+            obj.delete()
+        
+        # Сохраняем остальные объекты
+        result = super().save(commit)
+        print(f"DEBUG: RecipeImageFormSet save() завершен")
+        return result
 
-# Formset для создания нового рецепта (с одним пустым полем)
-RecipeImageFormSetCreate = inlineformset_factory(
+# Formset для редактирования существующего рецепта (без пустого поля по умолчанию)
+RecipeImageFormSet = RecipeImageFormSetBase
+
+# Кастомный формсет для создания рецепта с правильной обработкой удаления
+class RecipeImageFormSetCreateBase(inlineformset_factory(
     Recipe,
     RecipeImage,
     fields=("image",),
@@ -144,7 +263,71 @@ RecipeImageFormSetCreate = inlineformset_factory(
             'accept': 'image/*'
         })
     }
-)
+)):
+    def clean(self):
+        """Кастомная валидация для обработки удаления изображений"""
+        for form in self.forms:
+            if form.cleaned_data and form.cleaned_data.get('DELETE', False):
+                # Если изображение помечено для удаления, очищаем поле image
+                form.cleaned_data['image'] = None
+        return super().clean()
+    
+    def is_valid(self):
+        """Переопределяем is_valid для правильной обработки пустых форм и удаления"""
+        # Сначала вызываем стандартную валидацию
+        valid = super().is_valid()
+        
+        if not valid:
+            # Проверяем, есть ли ошибки только из-за пустых форм или удаления
+            for form in self.forms:
+                if hasattr(form, 'cleaned_data') and form.cleaned_data:
+                    # Если форма пустая (нет изображения) или помечена для удаления, очищаем ошибки
+                    if not form.cleaned_data.get('image') or form.cleaned_data.get('DELETE', False):
+                        form._errors = {}
+                elif not hasattr(form, 'cleaned_data') or not form.cleaned_data:
+                    # Пустая форма - считаем валидной
+                    form._errors = {}
+            
+            # Проверяем, остались ли ошибки после очистки пустых форм
+            has_errors = any(form.errors for form in self.forms)
+            return not has_errors
+        
+        return valid
+    
+    def save(self, commit=True):
+        """Переопределяем save для правильного удаления изображений"""
+        if not self.is_valid():
+            return self.save_existing_objects(commit) and self.save_new_objects(commit)
+        
+        print(f"DEBUG: RecipeImageFormSet save() - commit={commit}")
+        print(f"DEBUG: Количество форм: {len(self.forms)}")
+        
+        # Обрабатываем удаление изображений
+        deleted_objects = []
+        for i, form in enumerate(self.forms):
+            print(f"DEBUG: Форма {i}: cleaned_data={form.cleaned_data}")
+            if form.cleaned_data and form.cleaned_data.get('DELETE', False):
+                if form.instance.pk:
+                    print(f"DEBUG: Помечено для удаления: {form.instance.pk}")
+                    deleted_objects.append(form.instance)
+                else:
+                    print(f"DEBUG: Форма помечена для удаления, но нет instance.pk")
+        
+        print(f"DEBUG: Объектов для удаления: {len(deleted_objects)}")
+        
+        # Удаляем помеченные объекты
+        for obj in deleted_objects:
+            print(f"DEBUG: Удаляем объект {obj.pk}")
+            obj.delete()
+        
+        # Сохраняем остальные объекты
+        result = super().save(commit)
+        print(f"DEBUG: RecipeImageFormSet save() завершен")
+        return result
+
+# Formset для создания нового рецепта (с одним пустым полем)
+RecipeImageFormSetCreate = RecipeImageFormSetCreateBase
+
 
 class CommentForm(forms.ModelForm):
     class Meta:

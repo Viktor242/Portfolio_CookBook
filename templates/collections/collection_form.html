@@ -1,5 +1,39 @@
 {% extends "main/base.html" %}
 
+{% block extra_css %}
+<style>
+/* Inline стили для увеличенного чекбокса (fallback для PythonAnywhere) */
+.collection-form .form-check-input {
+    width: 24px !important;
+    height: 24px !important;
+    transform: scale(1.5) !important;
+    margin-right: 15px !important;
+    margin-top: 0 !important;
+}
+
+.collection-form .form-check-label {
+    font-size: 18px !important;
+    font-weight: 500 !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    margin-bottom: 0 !important;
+}
+
+/* Дополнительные стили для лучшего отображения */
+.collection-form .form-check {
+    display: flex !important;
+    align-items: center !important;
+    margin-bottom: 1rem !important;
+}
+
+.collection-form .form-check-input:checked {
+    background-color: #007bff !important;
+    border-color: #007bff !important;
+}
+</style>
+{% endblock %}
+
 {% block page_title %}
   <div class="text-center mb-4">
     <h1 class="display-4 text-primary">
@@ -60,4 +94,47 @@
       </div>
     </div>
   </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Принудительное применение стилей для чекбокса (fallback для PythonAnywhere)
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🔧 Применяем стили для увеличенного чекбокса');
+    
+    const checkbox = document.querySelector('.collection-form .form-check-input');
+    const label = document.querySelector('.collection-form .form-check-label');
+    const formCheck = document.querySelector('.collection-form .form-check');
+    
+    if (checkbox) {
+        console.log('✅ Чекбокс найден, применяем стили');
+        
+        // Принудительно применяем стили через JavaScript
+        checkbox.style.width = '24px';
+        checkbox.style.height = '24px';
+        checkbox.style.transform = 'scale(1.5)';
+        checkbox.style.marginRight = '15px';
+        checkbox.style.marginTop = '0';
+        
+        if (label) {
+            label.style.fontSize = '18px';
+            label.style.fontWeight = '500';
+            label.style.display = 'flex';
+            label.style.alignItems = 'center';
+            label.style.gap = '8px';
+            label.style.marginBottom = '0';
+        }
+        
+        if (formCheck) {
+            formCheck.style.display = 'flex';
+            formCheck.style.alignItems = 'center';
+            formCheck.style.marginBottom = '1rem';
+        }
+        
+        console.log('✅ Стили применены успешно');
+    } else {
+        console.warn('⚠️ Чекбокс не найден');
+    }
+});
+</script>
 {% endblock %}

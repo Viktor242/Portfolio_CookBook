@@ -166,20 +166,12 @@
 
   <!-- Модальное окно для добавления в коллекцию -->
   {% if user.is_authenticated %}
-    <div class="modal fade" id="collectionModal" tabindex="-1">
-      <div class="modal-dialog">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title">
-              <i class="fas fa-folder me-2"></i>Добавить в коллекцию
-            </h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-          </div>
-          <div class="modal-body">
-            <div id="modalRecipeInfo"></div>
-            <div id="modalCollections"></div>
-          </div>
-        </div>
+    <div id="collectionModal" class="modal" style="display: none;">
+      <div class="modal-content">
+        <span class="close" onclick="hideCollectionModal()">&times;</span>
+        <h3>📚 Добавить в коллекцию</h3>
+        <div id="modalRecipeInfo"></div>
+        <div id="modalCollections"></div>
       </div>
     </div>
   {% endif %}

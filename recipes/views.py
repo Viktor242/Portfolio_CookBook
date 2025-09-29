@@ -30,6 +30,9 @@ class HomePageView(ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['categories'] = Category.objects.all()
+        context['query'] = self.request.GET.get('q', '')
+        context['selected_difficulty'] = self.request.GET.get('difficulty', '')
+        context['selected_category'] = self.request.GET.get('category', '')
         return context
 
 
@@ -40,36 +43,51 @@ def recipe_create(request):
 
     if request.method == "POST":
         form = RecipeForm(request.POST)
-        if form.is_valid():
+        formset_ingredients = RecipeIngredientFormSetCreate(
+            request.POST, prefix=prefix_ingredients
+        )
+        image_formset = RecipeImageFormSetCreate(
+            request.POST, request.FILES, prefix=prefix_images
+        )
+
+        # Проверяем валидность всех форм
+        form_valid = form.is_valid()
+        ingredients_valid = formset_ingredients.is_valid()
+        images_valid = image_formset.is_valid()
+        
+        print(f"CREATE - Form valid: {form_valid}")
+        print(f"CREATE - Ingredients formset valid: {ingredients_valid}")
+        print(f"CREATE - Images formset valid: {images_valid}")
+        
+        if form_valid and ingredients_valid and images_valid:
             recipe = form.save(commit=False)
             recipe.author = request.user
             recipe.save()
 
-            formset_ingredients = RecipeIngredientFormSetCreate(
-                request.POST, instance=recipe, prefix=prefix_ingredients
-            )
-            image_formset = RecipeImageFormSetCreate(
-                request.POST, request.FILES, instance=recipe, prefix=prefix_images
-            )
-
-            if formset_ingredients.is_valid() and image_formset.is_valid():
-                formset_ingredients.save()
-                image_formset.save()
-                return redirect("recipe_detail", pk=recipe.pk)
+            formset_ingredients.instance = recipe
+            image_formset.instance = recipe
+            formset_ingredients.save()
+            image_formset.save()
+            print(f"CREATE - Рецепт {recipe.title} успешно создан!")
+            return redirect("recipe_detail", pk=recipe.pk)
         else:
-            formset_ingredients = RecipeIngredientFormSetCreate(
-                request.POST, prefix=prefix_ingredients
-            )
-            image_formset = RecipeImageFormSet(
-                request.POST, request.FILES, prefix=prefix_images
-            )
+            # Если есть ошибки, показываем их
+            print("CREATE - Ошибки валидации:")
+            if not form_valid:
+                print(f"CREATE - Form errors: {form.errors}")
+            if not ingredients_valid:
+                print(f"CREATE - Formset ingredients errors: {formset_ingredients.errors}")
+                print(f"CREATE - Formset ingredients non_form_errors: {formset_ingredients.non_form_errors()}")
+            if not images_valid:
+                print(f"CREATE - Image formset errors: {image_formset.errors}")
+                print(f"CREATE - Image formset non_form_errors: {image_formset.non_form_errors()}")
     else:
         form = RecipeForm()
         recipe = Recipe()
         formset_ingredients = RecipeIngredientFormSetCreate(
             instance=recipe, prefix=prefix_ingredients
         )
-        image_formset = RecipeImageFormSet(
+        image_formset = RecipeImageFormSetCreate(
             instance=recipe, prefix=prefix_images
         )
 
@@ -80,6 +98,8 @@ def recipe_create(request):
             "form": form,
             "formset": formset_ingredients,
             "image_formset": image_formset,
+            "ingredients": Ingredient.objects.all().order_by('name'),  # Добавляем ингредиенты для fallback
+            "editing": False,
         },
     )
 
@@ -94,6 +114,9 @@ def recipe_edit(request, pk):
     prefix_images = "images"
 
     if request.method == "POST":
+        print(f"DEBUG: POST данные: {dict(request.POST)}")
+        print(f"DEBUG: FILES данные: {dict(request.FILES)}")
+        
         form = RecipeForm(request.POST, instance=recipe)
         formset_ingredients = RecipeIngredientFormSet(
             request.POST, instance=recipe, prefix=prefix_ingredients
@@ -102,14 +125,69 @@ def recipe_edit(request, pk):
             request.POST, request.FILES, instance=recipe, prefix=prefix_images
         )
 
-        print(f"image_formset.errors: {image_formset.errors}")
-        if form.is_valid() and formset_ingredients.is_valid() and image_formset.is_valid():
-            recipe = form.save()
-            formset_ingredients.instance = recipe
-            image_formset.instance = recipe
+        # Проверяем валидность каждой формы отдельно
+        form_valid = form.is_valid()
+        ingredients_valid = formset_ingredients.is_valid()
+        images_valid = image_formset.is_valid()
+        
+        print(f"Form valid: {form_valid}")
+        print(f"Ingredients formset valid: {ingredients_valid}")
+        print(f"Images formset valid: {images_valid}")
+        
+        # Дополнительная проверка дубликатов ингредиентов
+        duplicate_ingredients = []
+        if ingredients_valid:
+            ingredient_ids = []
+            for ingredient_form in formset_ingredients.forms:
+                if (ingredient_form.cleaned_data and 
+                    ingredient_form.cleaned_data.get('ingredient') and 
+                    ingredient_form.cleaned_data.get('amount') and 
+                    not ingredient_form.cleaned_data.get('DELETE')):
+                    ingredient_id = ingredient_form.cleaned_data.get('ingredient').pk
+                    if ingredient_id in ingredient_ids:
+                        # Найден дубликат
+                        ingredient_name = ingredient_form.cleaned_data.get('ingredient').name
+                        duplicate_ingredients.append(ingredient_name)
+                    else:
+                        ingredient_ids.append(ingredient_id)
+        
+        if duplicate_ingredients:
+            # Добавляем ошибку в formset
+            duplicate_names = ', '.join(duplicate_ingredients)
+            formset_ingredients.add_error(None, f"⚠️ Внимание: Ингредиенты '{duplicate_names}' добавлены несколько раз. Удалите дубликаты или выберите другие ингредиенты.")
+            ingredients_valid = False
+        
+        if form_valid and ingredients_valid and images_valid:
+            saved_recipe = form.save()
+            formset_ingredients.instance = saved_recipe
+            image_formset.instance = saved_recipe
+            
+            # Дополнительная проверка перед сохранением ингредиентов
+            for ingredient_form in formset_ingredients.forms:
+                if ingredient_form.cleaned_data:
+                    # Если форма пустая (нет ингредиента или количества), помечаем для удаления
+                    if not ingredient_form.cleaned_data.get('ingredient') or not ingredient_form.cleaned_data.get('amount'):
+                        ingredient_form.cleaned_data['DELETE'] = True
+                else:
+                    # Если cleaned_data пустой, создаем пустой словарь с DELETE=True
+                    ingredient_form.cleaned_data = {'DELETE': True}
+            
+            # Сохраняем formset
             formset_ingredients.save()
             image_formset.save()
+            print(f"Рецепт {saved_recipe.title} успешно сохранен!")
             return redirect("my_recipes")
+        else:
+            # Если есть ошибки, показываем их
+            print("Ошибки валидации:")
+            if not form_valid:
+                print(f"Form errors: {form.errors}")
+            if not ingredients_valid:
+                print(f"Formset ingredients errors: {formset_ingredients.errors}")
+                print(f"Formset ingredients non_form_errors: {formset_ingredients.non_form_errors()}")
+            if not images_valid:
+                print(f"Image formset errors: {image_formset.errors}")
+                print(f"Image formset non_form_errors: {image_formset.non_form_errors()}")
     else:
         form = RecipeForm(instance=recipe)
         formset_ingredients = RecipeIngredientFormSet(instance=recipe, prefix=prefix_ingredients)
@@ -123,6 +201,7 @@ def recipe_edit(request, pk):
             "formset": formset_ingredients,
             "image_formset": image_formset,
             "editing": True,
+            "ingredients": Ingredient.objects.all().order_by('name'),  # Добавляем ингредиенты для fallback
         },
     )
 
@@ -202,6 +281,14 @@ class MyRecipesView(LoginRequiredMixin, ListView):
 
     def get_queryset(self):
         return Recipe.objects.filter(author=self.request.user).order_by("-created_at")
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['categories'] = Category.objects.all()
+        context['query'] = self.request.GET.get('q', '')
+        context['selected_difficulty'] = self.request.GET.get('difficulty', '')
+        context['selected_category'] = self.request.GET.get('category', '')
+        return context
 
 
 class IngredientListView(LoginRequiredMixin, ListView):
@@ -233,6 +320,15 @@ class CategoryListView(ListView):
     def get_queryset(self):
         return Category.objects.order_by("name")
 
+
+@require_http_methods(["GET"])
+def get_ingredient_name(request, ingredient_id):
+    """API для получения названия ингредиента по ID"""
+    try:
+        ingredient = get_object_or_404(Ingredient, pk=ingredient_id)
+        return JsonResponse({"name": ingredient.name})
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=400)
 
 @csrf_exempt
 def get_ingredient_unit(request):
@@ -318,7 +414,7 @@ def api_search_recipes(request):
             # Фильтр по ингредиенту (по названию)
             if ingredient_name:
                 print(f"Filtering by ingredient name: '{ingredient_name}'")
-                # Используем iregex для более надежного поиска без учета регистра
+                # Используем iregex для поиска по частичным совпадениям
                 recipes = recipes.filter(ingredients__name__iregex=ingredient_name)
                 print(f"After ingredient name filter: {recipes.count()} recipes")
             
@@ -357,7 +453,7 @@ def api_search_recipes(request):
                         'difficulty': recipe.difficulty,
                         'difficulty_display': recipe.get_difficulty_display(),
                         'category': recipe.category.name if recipe.category else None,
-                        'image_url': recipe.image.url if recipe.image else None,
+                        'image_url': None,  # Поле image удалено из модели Recipe
                         'url': f'/recipes/{recipe.id}/'
                     })
                 except Exception as e:
@@ -390,17 +486,28 @@ def api_search_ingredients(request):
         query = data.get('query', '').strip()
         
         print(f"DEBUG: Поиск ингредиентов, запрос: '{query}'")
+        print(f"DEBUG: Длина запроса: {len(query)}")
+        print(f"DEBUG: Коды символов: {[ord(c) for c in query]}")
         
         if len(query) < 2:
             # Если запрос пустой, возвращаем все ингредиенты (для загрузки существующих)
             ingredients = Ingredient.objects.all().order_by('name')
             print(f"DEBUG: Загружаем все ингредиенты, найдено: {ingredients.count()}")
         else:
-            # Поиск ингредиентов по части названия
+            # Поиск ингредиентов по части названия (без учета регистра)
+            # Используем iregex для более надежного поиска без учета регистра
             ingredients = Ingredient.objects.filter(
-                name__icontains=query
+                name__iregex=query
             ).order_by('name')[:10]  # Ограничиваем 10 результатами
+            
+            # Дополнительная отладка
             print(f"DEBUG: Поиск по '{query}', найдено: {ingredients.count()}")
+            print(f"DEBUG: Запрос в БД: name__iregex='{query}'")
+            
+            # Проверим, есть ли ингредиенты с похожими названиями
+            all_ingredients = Ingredient.objects.all()
+            similar_names = [ing.name for ing in all_ingredients if query.lower() in ing.name.lower()]
+            print(f"DEBUG: Похожие названия (без учета регистра): {similar_names}")
         
         ingredients_data = []
         for ingredient in ingredients:

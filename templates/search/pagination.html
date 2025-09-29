@@ -1,21 +1,20 @@
-<!-- search/templates/search/pagination.html -->
 {% if page_obj.has_other_pages %}
-  <div style="margin: 20px 0; text-align: center; display: flex; justify-content: center; gap: 10px; flex-wrap: wrap;">
+  <div class="pagination" style="margin: 20px 0; text-align: center;">
     {% if page_obj.has_previous %}
-      <a href="?q={{ query }}&category={{ selected_category }}&difficulty={{ selected_difficulty }}&min_cook_time={{ min_cook_time }}&max_cook_time={{ max_cook_time }}&sort={{ sort_by }}&page={{ page_obj.previous_page_number }}"
-         style="padding: 8px 12px; background: #007bff; color: white; text-decoration: none; border-radius: 4px;">
-        ← Назад
+      <a href="?{% if query %}q={{ query }}&{% endif %}{% if selected_category %}category={{ selected_category }}&{% endif %}{% if selected_difficulty %}difficulty={{ selected_difficulty }}&{% endif %}{% if min_cook_time %}min_cook_time={{ min_cook_time }}&{% endif %}{% if max_cook_time %}max_cook_time={{ max_cook_time }}&{% endif %}{% if sort_by %}sort_by={{ sort_by }}&{% endif %}{% if has_image == 'on' %}has_image=on&{% endif %}page={{ page_obj.previous_page_number }}" 
+         style="padding: 8px 12px; margin: 0 5px; background: #007bff; color: white; text-decoration: none; border-radius: 4px;">
+        ← Предыдущая
       </a>
     {% endif %}
-
-    <span style="padding: 8px 12px; background: #f0f0f0; border-radius: 4px;">
+    
+    <span style="padding: 8px 12px; margin: 0 5px; background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 4px;">
       Страница {{ page_obj.number }} из {{ page_obj.paginator.num_pages }}
     </span>
-
+    
     {% if page_obj.has_next %}
-      <a href="?q={{ query }}&category={{ selected_category }}&difficulty={{ selected_difficulty }}&min_cook_time={{ min_cook_time }}&max_cook_time={{ max_cook_time }}&sort={{ sort_by }}&page={{ page_obj.next_page_number }}"
-         style="padding: 8px 12px; background: #007bff; color: white; text-decoration: none; border-radius: 4px;">
-        Вперёд →
+      <a href="?{% if query %}q={{ query }}&{% endif %}{% if selected_category %}category={{ selected_category }}&{% endif %}{% if selected_difficulty %}difficulty={{ selected_difficulty }}&{% endif %}{% if min_cook_time %}min_cook_time={{ min_cook_time }}&{% endif %}{% if max_cook_time %}max_cook_time={{ max_cook_time }}&{% endif %}{% if sort_by %}sort_by={{ sort_by }}&{% endif %}{% if has_image == 'on' %}has_image=on&{% endif %}page={{ page_obj.next_page_number }}" 
+         style="padding: 8px 12px; margin: 0 5px; background: #007bff; color: white; text-decoration: none; border-radius: 4px;">
+        Следующая →
       </a>
     {% endif %}
   </div>

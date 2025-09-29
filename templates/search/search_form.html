@@ -1,5 +1,5 @@
 <!-- search/templates/search/search_form.html -->
-<form method="GET" action="{% url 'search' %}" style="margin: 20px 0; padding: 15px; background: #f9f9f9; border-radius: 8px; border: 1px solid #ddd; display: flex; flex-wrap: wrap; gap: 12px; align-items: center; flex-direction: column;">
+<form method="GET" action="{% url 'search' %}" class="search-form" style="margin: 20px 0; padding: 15px; background: #f9f9f9; border-radius: 8px; border: 1px solid #ddd; display: flex; flex-wrap: wrap; gap: 12px; align-items: center; flex-direction: column;">
 
   <!-- Поиск по тексту -->
   <div style="display: flex; align-items: center; gap: 8px; width: 100%; max-width: 800px;">
@@ -73,25 +73,20 @@
   </div>
 
   <!-- Фильтр по картинке -->
-  <div style="display: flex; align-items: center; gap: 8px; width: 100%; max-width: 800px;">
-    <label for="id_has_image" style="font-weight: bold; min-width: 120px;">С картинкой:</label>
-    <select
-      name="has_image"
-      id="id_has_image"
-      style="flex: 1; padding: 8px; font-size: 16px; border: 1px solid #ccc; border-radius: 4px;"
-    >
-      <option value="">Все рецепты</option>
-      <option value="yes" {% if has_image == 'yes' %}selected{% endif %}>Только с картинкой</option>
-      <option value="no" {% if has_image == 'no' %}selected{% endif %}>Только без картинки</option>
-    </select>
+  <div style="display: flex; align-items: center; gap: 15px; width: 100%; max-width: 800px; padding: 15px; background: #f8f9fa;">
+    <label for="id_has_image" style="font-weight: bold; min-width: 120px; font-size: 16px; color: #495057;">С картинкой:</label>
+    <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+      <input type="checkbox" name="has_image" value="on" {% if has_image == 'on' %}checked{% endif %} style="transform: scale(2); margin-right: 5px;">
+      <span style="font-size: 16px; font-weight: bold; color: #495057;">Только с картинкой</span>
+    </label>
   </div>
 
   <!-- СОРТИРОВКА -->
   <div style="display: flex; align-items: center; gap: 8px; width: 100%; max-width: 800px;">
     <label for="id_sort" style="font-weight: bold; min-width: 80px;">Сортировать:</label>
     <select
-      name="sort"
-      id="id_sort"
+      name="sort_by"
+      id="id_sort_by"
       style="flex: 1; padding: 8px; font-size: 16px; border: 1px solid #ccc; border-radius: 4px;"
       onchange="this.form.submit()"  <!-- 🚀 Автосабмит при выборе! -->
     >
@@ -117,11 +112,10 @@
       Поиск
     </button>
 
-    {% if query or selected_category or selected_difficulty or min_cook_time or max_cook_time %}
+    {% if query or selected_category or selected_difficulty or min_cook_time or max_cook_time or has_image %}
       <a href="{% url 'search' %}" style="padding: 8px 16px; font-size: 16px; color: #666; text-decoration: none; border: 1px solid #ccc; border-radius: 4px; background: white; cursor: pointer;">
         Очистить
       </a>
     {% endif %}
-    
   </div>
 </form>

@@ -9,6 +9,49 @@
   <div class="form-container">
   <form method="post" enctype="multipart/form-data">
     {% csrf_token %}
+    
+    <!-- Отображение ошибок формы -->
+    {% if form.errors %}
+      <div class="alert alert-danger">
+        <h5>Ошибки в форме:</h5>
+        {{ form.errors }}
+      </div>
+    {% endif %}
+    
+    {% if formset.non_form_errors %}
+      <script>
+        // Проверяем есть ли ошибки дубликатов
+        document.addEventListener('DOMContentLoaded', function() {
+          {% for error in formset.non_form_errors %}
+            const errorText = "{{ error|escapejs }}";
+            console.log('Error text:', errorText);
+            if (errorText.includes('добавлены несколько раз')) {
+              // Извлекаем названия дубликатов
+              const match = errorText.match(/Ингредиенты '([^']+)'/);
+              if (match) {
+                const duplicateNames = match[1];
+                showInfoModal(
+                  'Дубликат ингредиента',
+                  `⚠️ Внимание: Ингредиенты "${duplicateNames}" добавлены несколько раз. Удалите дубликаты или выберите другие ингредиенты.`
+                );
+              }
+            }
+          {% endfor %}
+        });
+      </script>
+    {% endif %}
+    
+    {% if formset.errors %}
+      <!-- Ошибки полей ингредиентов скрыты, показываем только модальное окно -->
+    {% endif %}
+    
+    {% if image_formset.non_form_errors %}
+      <!-- Ошибки изображений скрыты -->
+    {% endif %}
+    
+    {% if image_formset.errors %}
+      <!-- Ошибки полей изображений скрыты -->
+    {% endif %}
       
       <!-- Основные поля рецепта -->
       <div class="form-group">
@@ -50,6 +93,9 @@
       {% for subform in formset %}
           <div class="form-row" data-form-index="{{ forloop.counter0 }}">
             {{ subform.id }}
+            {% if subform.errors %}
+              <!-- Ошибки отдельных форм ингредиентов скрыты -->
+            {% endif %}
             <div class="form-group">
               <label>Ингредиент *</label>
               <div style="display: flex; gap: 10px; align-items: center;">
@@ -82,11 +128,14 @@
       {% for imgform in image_formset %}
           <div class="image-form-row" data-form-index="{{ forloop.counter0 }}">
           {{ imgform.id }}
+            {% if imgform.errors %}
+              <!-- Ошибки отдельных форм изображений скрыты -->
+            {% endif %}
             <div class="form-group">
               <label>Изображение</label>
           {{ imgform.image }}
             </div>
-            <button type="button" class="btn btn-danger btn-sm remove-image" style="padding: 5px 10px; font-size: 12px;">🗑 Удалить</button>
+            <button type="button" class="btn btn-danger btn-sm remove-image" style="padding: 5px 10px; font-size: 12px; margin-top: 10px;">🗑 Удалить изображение</button>
         </div>
       {% endfor %}
     </div>
@@ -97,7 +146,7 @@
 
       <!-- Кнопки действий -->
       <div class="form-buttons">
-        <button type="submit" class="btn btn-primary">💾 Сохранить рецепт</button>
+        <button type="submit" class="btn btn-primary" onclick="cleanEmptyIngredientForms()">💾 Сохранить рецепт</button>
         <a href="{% url 'recipe_list' %}" class="btn btn-secondary">❌ Отмена</a>
       </div>
   </form>
@@ -135,15 +184,22 @@
         <label>Изображение</label>
         <input type="file" name="images-__prefix__-image" accept="image/*">
       </div>
-      <button type="button" class="btn btn-danger btn-sm remove-image" style="padding: 5px 10px; font-size: 12px;">🗑 Удалить</button>
+      <button type="button" class="btn btn-danger btn-sm remove-image" style="padding: 5px 10px; font-size: 12px; margin-top: 10px;">🗑 Удалить изображение</button>
     </div>
   </template>
 
-  <!-- Модалка для выбора ингредиентов -->
+  <!-- Fallback для выбора ингредиентов (если AJAX не работает) -->
+  {% include 'recipes/ingredient_fallback.html' %}
   <div id="ingredientModal" class="modal" style="display: none;">
     <div class="modal-content" style="max-width: 500px; margin: 50px auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
       <div style="margin-bottom: 20px;">
         <h3 style="margin: 0; color: #007bff; text-align: center;">🔍 Выбрать ингредиент</h3>
+        <div style="text-align: center; margin-top: 10px;">
+          <button type="button" onclick="switchToFallback()" 
+                  style="background: #28a745; color: white; border: none; padding: 5px 10px; border-radius: 4px; font-size: 12px;">
+            📋 Простой выбор
+          </button>
+        </div>
       </div>
       
       <div class="form-group">
@@ -174,5 +230,40 @@
     </div>
   </div>
 
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Загружаем существующие ингредиенты при редактировании
+    {% if editing %}
+    loadExistingIngredients();
+    {% endif %}
+});
+
+function loadExistingIngredients() {
+    const ingredientInputs = document.querySelectorAll('.ingredient-id-input');
+    const ingredientDisplays = document.querySelectorAll('.ingredient-name-display');
+    
+    ingredientInputs.forEach((input, index) => {
+        const ingredientId = input.value;
+        const display = ingredientDisplays[index];
+        
+        if (ingredientId) {
+            // Загружаем название ингредиента через AJAX
+            fetch(`/recipes/api/ingredient-name/${ingredientId}/`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.name) {
+                        display.value = data.name;
+                    }
+                })
+                .catch(error => {
+                    console.error('Ошибка загрузки ингредиента:', error);
+                });
+        }
+    });
+}
+</script>
 {% endblock %}
 

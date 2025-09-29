@@ -36,7 +36,10 @@ def collection_create(request):
             return redirect("collection_list")
     else:
         form = CollectionForm()
-    return render(request, "collections/collection_form.html", {"form": form})
+    return render(request, "collections/collection_form.html", {
+        "form": form,
+        "editing": False,
+    })
 
 @login_required
 def collection_edit(request, pk):

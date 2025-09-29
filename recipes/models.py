@@ -1,9 +1,9 @@
 from decimal import Decimal, ROUND_HALF_UP
+import decimal
 from django.conf import settings
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
 from django.db.models import PROTECT, Avg
-from django.utils.html import format_html
 from django.utils.text import slugify
 
 
@@ -97,8 +97,7 @@ class Recipe(models.Model):
 
     def image_tag(self):
         """Миниатюра для админки."""
-        if self.image:
-            return format_html('<img src="{}" style="max-height:60px;"/>', self.image.url)
+        # Поле image удалено из модели Recipe
         return "—"
     image_tag.short_description = "Фото"
 
@@ -109,7 +108,16 @@ class Recipe(models.Model):
         if avg_value is None:
             new_value = Decimal("0.00")
         else:
-            new_value = Decimal(str(avg_value)).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+            try:
+                # Безопасное преобразование в Decimal
+                avg_str = str(avg_value)
+                if avg_str.lower() in ['nan', 'inf', '-inf']:
+                    new_value = Decimal("0.00")
+                else:
+                    new_value = Decimal(avg_str).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+            except (ValueError, TypeError, decimal.InvalidOperation):
+                new_value = Decimal("0.00")
+        
         if self.rating != new_value:
             self.rating = new_value
             self.save(update_fields=["rating"])
@@ -137,7 +145,10 @@ class RecipeImage(models.Model):
         ordering = ["position", "id"]
 
     def __str__(self):
-        return f"{self.recipe.title} → {self.image.name}"
+        try:
+            return f"{self.recipe.title} → {self.image.name}"
+        except:
+            return f"Изображение → {self.image.name}"
 
 
 class RecipeIngredient(models.Model):
@@ -178,7 +189,10 @@ class Comment(models.Model):
         ordering = ["-created_at"]
 
     def __str__(self):
-        return f"Комментарий от {self.user} к «{self.recipe}»"
+        try:
+            return f"Комментарий от {self.user} к «{self.recipe}»"
+        except:
+            return f"Комментарий от {self.user}"
 
 
 class Rating(models.Model):
@@ -210,4 +224,6 @@ class Rating(models.Model):
     def delete(self, *args, **kwargs):
         recipe = self.recipe
         super().delete(*args, **kwargs)
-        recipe.update_rating()
+        # Проверяем, что рецепт еще существует перед обновлением рейтинга
+        if Recipe.objects.filter(pk=recipe.pk).exists():
+            recipe.update_rating()

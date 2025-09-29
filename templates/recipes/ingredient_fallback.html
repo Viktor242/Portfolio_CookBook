@@ -1,0 +1,49 @@
+<!-- Альтернативный способ выбора ингредиентов без AJAX -->
+<div id="ingredientFallback" style="display: none;">
+    <div class="modal-content" style="max-width: 500px; margin: 50px auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+        <h3 style="margin: 0; color: #007bff; text-align: center;">🔍 Выбрать ингредиент</h3>
+        
+        <div class="form-group" style="margin-top: 20px;">
+            <label>Выберите ингредиент:</label>
+            <select id="ingredientSelect" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                <option value="">-- Выберите ингредиент --</option>
+                {% for ingredient in ingredients %}
+                    <option value="{{ ingredient.id }}">{{ ingredient.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <div style="margin-top: 20px; text-align: center;">
+            <button type="button" onclick="selectIngredientFromDropdown()" 
+                    style="background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 4px; margin-right: 10px;">
+                Выбрать
+            </button>
+            <button type="button" onclick="closeIngredientFallback()" 
+                    style="background: #6c757d; color: white; border: none; padding: 10px 20px; border-radius: 4px;">
+                Отмена
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+function selectIngredientFromDropdown() {
+    const select = document.getElementById('ingredientSelect');
+    const ingredientId = select.value;
+    const ingredientName = select.options[select.selectedIndex].text;
+    
+    if (ingredientId) {
+        selectIngredient(ingredientId, ingredientName);
+        closeIngredientFallback();
+    } else {
+        alert('Выберите ингредиент из списка');
+    }
+}
+
+function closeIngredientFallback() {
+    document.getElementById('ingredientFallback').style.display = 'none';
+}
+</script>
+
+
+

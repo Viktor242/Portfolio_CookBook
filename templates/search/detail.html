@@ -1,18 +1,57 @@
-<!-- search/templates/search/detail.html -->
-<h1>{{ recipe.title }}</h1>
-<p><strong>Автор:</strong> {{ recipe.author.username }}</p>
-<p><strong>Категория:</strong> {{ recipe.category.name|default:"Без категории" }}</p>
-<p><strong>Сложность:</strong> {{ recipe.get_difficulty_display }}</p>
-<p><strong>Рейтинг:</strong> {{ recipe.rating }} ⭐</p>
-<p><strong>Время приготовления:</strong> {{ recipe.cook_time }} мин</p>
-<h3>Инструкция:</h3>
-<p>{{ recipe.instruction|linebreaks }}</p>
-
-<h3>Ингредиенты:</h3>
-<ul>
-  {% for ri in recipe.recipe_ingredients.all %}
-    <li>{{ ri.ingredient.name }} — {{ ri.amount }} {{ ri.unit|default:"" }}</li>
-  {% endfor %}
-</ul>
-
-<a href="{% url 'search' %}">← Назад к поиску</a>
+{% extends "main/base.html" %}
+{% block title %}{{ recipe.title }} - Кулинарная книга{% endblock %}
+{% block page_title %}
+  <h1>{{ recipe.title }}</h1>
+{% endblock %}
+{% block content %}
+  <div class="recipe-detail">
+    <div class="recipe-meta">
+      <p><strong>👤 Автор:</strong> {{ recipe.author.username }}</p>
+      <p><strong>📂 Категория:</strong> {{ recipe.category.name|default:"Без категории" }}</p>
+      <p><strong>⚡ Сложность:</strong> {{ recipe.get_difficulty_display }}</p>
+      <p><strong>⭐ Рейтинг:</strong> {{ recipe.rating }}</p>
+      <p><strong>⏱️ Время:</strong> {{ recipe.cook_time }} мин</p>
+      <p><strong>📅 Создан:</strong> {{ recipe.created_at|date:"d.m.Y" }}</p>
+    </div>
+    
+    {% if recipe.description %}
+      <div class="recipe-description">
+        <h3>Описание</h3>
+        <p>{{ recipe.description|linebreaks }}</p>
+      </div>
+    {% endif %}
+    
+    {% if recipe.ingredients.exists %}
+      <div class="recipe-ingredients">
+        <h3>Ингредиенты</h3>
+        <ul>
+          {% for ingredient in recipe.ingredients.all %}
+            <li>{{ ingredient.name }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+    {% endif %}
+    
+    {% if recipe.instructions %}
+      <div class="recipe-instructions">
+        <h3>Инструкции</h3>
+        <div>{{ recipe.instructions|linebreaks }}</div>
+      </div>
+    {% endif %}
+    
+    {% if recipe.images.exists %}
+      <div class="recipe-images">
+        <h3>Изображения</h3>
+        <div class="image-gallery">
+          {% for image in recipe.images.all %}
+            <img src="{{ image.image.url }}" alt="{{ recipe.title }}" style="max-width: 300px; margin: 10px;">
+          {% endfor %}
+        </div>
+      </div>
+    {% endif %}
+  </div>
+  
+  <div style="margin-top: 20px;">
+    <a href="{% url 'search' %}" class="btn btn-secondary">← Назад к поиску</a>
+  </div>
+{% endblock %}
